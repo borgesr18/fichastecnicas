@@ -107,7 +107,15 @@ export default function EstoquePage() {
           valorUnitario: formData.get('valorUnitario'),
           userId: (() => {
             const userData = localStorage.getItem('user-data')
-            return userData ? JSON.parse(userData).id : 'cmcf4w2yj0003qhzr8vt0gz9l'
+            if (userData) {
+              try {
+                const user = JSON.parse(userData)
+                return user.id === '1' ? 'cmcf4w2yj0003qhzr8vt0gz9l' : user.id
+              } catch {
+                return 'cmcf4w2yj0003qhzr8vt0gz9l'
+              }
+            }
+            return 'cmcf4w2yj0003qhzr8vt0gz9l'
           })()
         })
       })

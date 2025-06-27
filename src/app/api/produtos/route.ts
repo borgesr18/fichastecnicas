@@ -22,7 +22,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nome, categoriaId, unidadeId, custoUnitario, estoqueMinimo } = body
+    const { nome, marca, categoriaId, unidadeId, custoUnitario, estoqueMinimo } = body
     
     const parsedCusto = parseFloat(custoUnitario)
     const parsedEstoque = parseInt(estoqueMinimo)
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     const produto = await prisma.insumo.create({
       data: {
         nome,
+        marca: marca || null,
         categoriaInsumoId: categoriaId,
         unidadeMedidaId: unidadeId,
         custoUnitario: parsedCusto,

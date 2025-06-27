@@ -70,6 +70,7 @@ export default function ProdutosPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [formData, setFormData] = useState({
     nome: '',
+    marca: '',
     categoriaId: '',
     unidadeId: '',
     custoUnitario: '',
@@ -124,6 +125,7 @@ export default function ProdutosPage() {
       setIsDialogOpen(false)
       setFormData({
         nome: '',
+        marca: '',
         categoriaId: '',
         unidadeId: '',
         custoUnitario: '',
@@ -147,6 +149,22 @@ export default function ProdutosPage() {
   const getStatusText = (produto: Produto) => {
     if (produto.estoqueAtual <= produto.estoqueMinimo) return 'Estoque Baixo'
     return 'Ativo'
+  }
+
+  const handleDeleteProduto = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir este produto?')) return
+    
+    try {
+      const response = await fetch(`/api/produtos/${id}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) throw new Error('Failed to delete produto')
+      
+      await fetchData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete produto')
+    }
   }
 
   return (
@@ -184,6 +202,17 @@ export default function ProdutosPage() {
                     required
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="marca">Marca</Label>
+                  <Input 
+                    id="marca" 
+                    placeholder="Ex: Nestlé"
+                    value={formData.marca}
+                    onChange={(e) => setFormData({...formData, marca: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="categoria">Categoria</Label>
                   <Select value={formData.categoriaId} onValueChange={(value) => setFormData({...formData, categoriaId: value})}>
@@ -331,13 +360,13 @@ export default function ProdutosPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => alert(`Produto: ${produto.nome}\nCategoria: ${produto.categoriaInsumo.nome}\nCusto: R$ ${Number(produto.custoUnitario).toFixed(2)}\nEstoque: ${produto.estoqueAtual} ${produto.unidadeMedida.simbolo}`)}>
                               <Package className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => alert(`Funcionalidade de edição em desenvolvimento.\nProduto: ${produto.nome}`)}>
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" size="sm" className="text-destructive">
+                            <Button variant="outline" size="sm" className="text-destructive" onClick={() => handleDeleteProduto(produto.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
