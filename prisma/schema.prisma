@@ -1,0 +1,203 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum para roles de usuários
+enum UserRole {
+  ADMIN
+  EDITOR
+  VISUALIZADOR
+}
+
+// Modelo de Usuários
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      UserRole @default(VISUALIZADOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  fichasTecnicas FichaTecnica[]
+  producoes      Producao[]
+  movimentacoes  MovimentacaoEstoque[]
+
+  @@map("users")
+}
+
+// Modelo de Categorias de Insumos
+model CategoriaInsumo {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  descricao String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  insumos Insumo[]
+
+  @@map("categorias_insumos")
+}
+
+// Modelo de Categorias de Receitas
+model CategoriaReceita {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  descricao String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  fichasTecnicas FichaTecnica[]
+
+  @@map("categorias_receitas")
+}
+
+// Modelo de Unidades de Medida
+model UnidadeMedida {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  simbolo   String   @unique
+  tipo      String   // peso, volume, unidade, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  insumos              Insumo[]
+  ingredientesFicha    IngredienteFichaTecnica[]
+  movimentacoesEstoque MovimentacaoEstoque[]
+
+  @@map("unidades_medida")
+}
+
+// Modelo de Insumos/Produtos
+model Insumo {
+  id                String   @id @default(cuid())
+  nome              String
+  descricao         String?
+  custoUnitario     Decimal  @db.Decimal(10, 2)
+  estoqueAtual      Decimal  @default(0) @db.Decimal(10, 3)
+  estoqueMinimo     Decimal? @db.Decimal(10, 3)
+  categoriaInsumoId String
+  unidadeMedidaId   String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relacionamentos
+  categoriaInsumo      CategoriaInsumo           @relation(fields: [categoriaInsumoId], references: [id])
+  unidadeMedida        UnidadeMedida             @relation(fields: [unidadeMedidaId], references: [id])
+  ingredientesFicha    IngredienteFichaTecnica[]
+  movimentacoesEstoque MovimentacaoEstoque[]
+
+  @@map("insumos")
+}
+
+// Modelo de Fichas Técnicas
+model FichaTecnica {
+  id                 String   @id @default(cuid())
+  nome               String
+  descricao          String?
+  rendimentoTotal    Decimal  @db.Decimal(10, 3)
+  unidadeRendimento  String
+  modoPreparo        String?
+  tempoPreparoMin    Int?
+  categoriaReceitaId String
+  userId             String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relacionamentos
+  categoriaReceita CategoriaReceita              @relation(fields: [categoriaReceitaId], references: [id])
+  user             User                          @relation(fields: [userId], references: [id])
+  ingredientes     IngredienteFichaTecnica[]
+  producoes        Producao[]
+  precos           PrecoFichaTecnica[]
+
+  @@map("fichas_tecnicas")
+}
+
+// Modelo de Ingredientes da Ficha Técnica
+model IngredienteFichaTecnica {
+  id              String  @id @default(cuid())
+  quantidade      Decimal @db.Decimal(10, 3)
+  fatorConversao  Decimal @default(1) @db.Decimal(10, 4)
+  fichaTecnicaId  String
+  insumoId        String
+  unidadeMedidaId String
+
+  // Relacionamentos
+  fichaTecnica  FichaTecnica  @relation(fields: [fichaTecnicaId], references: [id], onDelete: Cascade)
+  insumo        Insumo        @relation(fields: [insumoId], references: [id])
+  unidadeMedida UnidadeMedida @relation(fields: [unidadeMedidaId], references: [id])
+
+  @@unique([fichaTecnicaId, insumoId])
+  @@map("ingredientes_ficha_tecnica")
+}
+
+// Modelo de Movimentações de Estoque
+model MovimentacaoEstoque {
+  id              String   @id @default(cuid())
+  tipo            String   // ENTRADA, SAIDA, PRODUCAO
+  quantidade      Decimal  @db.Decimal(10, 3)
+  valorUnitario   Decimal? @db.Decimal(10, 2)
+  valorTotal      Decimal? @db.Decimal(10, 2)
+  observacao      String?
+  insumoId        String
+  unidadeMedidaId String
+  userId          String
+  producaoId      String?
+  createdAt       DateTime @default(now())
+
+  // Relacionamentos
+  insumo        Insumo        @relation(fields: [insumoId], references: [id])
+  unidadeMedida UnidadeMedida @relation(fields: [unidadeMedidaId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  producao      Producao?     @relation(fields: [producaoId], references: [id])
+
+  @@map("movimentacoes_estoque")
+}
+
+// Modelo de Produção
+model Producao {
+  id                   String   @id @default(cuid())
+  quantidadeProduzida  Decimal  @db.Decimal(10, 3)
+  custoTotalProducao   Decimal? @db.Decimal(10, 2)
+  observacao           String?
+  fichaTecnicaId       String
+  userId               String
+  createdAt            DateTime @default(now())
+
+  // Relacionamentos
+  fichaTecnica      FichaTecnica          @relation(fields: [fichaTecnicaId], references: [id])
+  user              User                  @relation(fields: [userId], references: [id])
+  movimentacoesEstoque MovimentacaoEstoque[]
+
+  @@map("producoes")
+}
+
+// Modelo de Preços das Fichas Técnicas
+model PrecoFichaTecnica {
+  id             String   @id @default(cuid())
+  custoPorcao    Decimal  @db.Decimal(10, 2)
+  markup         Decimal  @db.Decimal(5, 2)
+  precoVenda     Decimal  @db.Decimal(10, 2)
+  margemLucro    Decimal  @db.Decimal(5, 2)
+  ativo          Boolean  @default(true)
+  fichaTecnicaId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relacionamentos
+  fichaTecnica FichaTecnica @relation(fields: [fichaTecnicaId], references: [id])
+
+  @@map("precos_fichas_tecnicas")
+}
