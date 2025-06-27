@@ -49,7 +49,7 @@ interface Producao {
 }
 
 export default function ProducaoPage() {
-  const [producoes, setProducoes] = useState<Producao[]>([
+  const [producoes] = useState<Producao[]>([
     {
       id: '1',
       fichaTecnica: 'Bolo de Chocolate',

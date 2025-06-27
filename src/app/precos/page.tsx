@@ -48,7 +48,7 @@ interface Preco {
 }
 
 export default function PrecosPage() {
-  const [precos, setPrecos] = useState<Preco[]>([
+  const [precos] = useState<Preco[]>([
     {
       id: '1',
       produto: 'Bolo de Chocolate',
@@ -166,14 +166,14 @@ export default function PrecosPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Produtos Precificados
+              Insumos Precificados
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{precos.length}</div>
             <p className="text-xs text-muted-foreground">
-              Produtos com preço definido
+              Insumos com preço definido
             </p>
           </CardContent>
         </Card>
@@ -280,7 +280,7 @@ export default function PrecosPage() {
           <CardHeader>
             <CardTitle>Preços Configurados ({precos.length})</CardTitle>
             <CardDescription>
-              Lista de produtos com preços definidos
+              Lista de insumos com preços definidos
             </CardDescription>
           </CardHeader>
           <CardContent>

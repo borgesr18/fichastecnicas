@@ -44,7 +44,7 @@ interface FichaTecnica {
 }
 
 export default function FichasTecnicasPage() {
-  const [fichas, setFichas] = useState<FichaTecnica[]>([
+  const [fichas] = useState<FichaTecnica[]>([
     {
       id: '1',
       nome: 'Bolo de Chocolate',

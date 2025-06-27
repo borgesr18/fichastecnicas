@@ -33,13 +33,19 @@ import {
   Plus,
   Edit,
   Trash2,
-  Settings,
   Users,
   Tag,
   Ruler
 } from 'lucide-react'
 
 interface Categoria {
+  id: string
+  nome: string
+  descricao: string
+  ativa: boolean
+}
+
+interface CategoriaInsumo {
   id: string
   nome: string
   descricao: string
@@ -62,27 +68,34 @@ interface Usuario {
 }
 
 export default function ConfiguracoesPage() {
-  const [categorias, setCategorias] = useState<Categoria[]>([
+  const [categorias] = useState<Categoria[]>([
     { id: '1', nome: 'Sobremesas', descricao: 'Doces e sobremesas', ativa: true },
     { id: '2', nome: 'Pratos Principais', descricao: 'Pratos principais', ativa: true },
     { id: '3', nome: 'Entradas', descricao: 'Aperitivos e entradas', ativa: true }
   ])
 
-  const [unidades, setUnidades] = useState<UnidadeMedida[]>([
+  const [unidades] = useState<UnidadeMedida[]>([
     { id: '1', nome: 'Quilograma', simbolo: 'kg', tipo: 'Peso' },
     { id: '2', nome: 'Litro', simbolo: 'L', tipo: 'Volume' },
     { id: '3', nome: 'Unidade', simbolo: 'un', tipo: 'Quantidade' },
     { id: '4', nome: 'Grama', simbolo: 'g', tipo: 'Peso' }
   ])
 
-  const [usuarios, setUsuarios] = useState<Usuario[]>([
+  const [categoriasInsumos] = useState<CategoriaInsumo[]>([
+    { id: '1', nome: 'Farinhas', descricao: 'Farinhas e derivados', ativa: true },
+    { id: '2', nome: 'Açúcares', descricao: 'Açúcares e adoçantes', ativa: true },
+    { id: '3', nome: 'Chocolates', descricao: 'Chocolates e cacau', ativa: true },
+    { id: '4', nome: 'Laticínios', descricao: 'Leites, queijos e derivados', ativa: true }
+  ])
+
+  const [usuarios] = useState<Usuario[]>([
     { id: '1', nome: 'Administrador', email: 'admin@sistemachef.com', role: 'admin', ativo: true },
     { id: '2', nome: 'Editor', email: 'editor@sistemachef.com', role: 'editor', ativo: true },
     { id: '3', nome: 'Visualizador', email: 'viewer@sistemachef.com', role: 'viewer', ativo: false }
   ])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [dialogType, setDialogType] = useState<'categoria' | 'unidade' | 'usuario'>('categoria')
+  const [dialogType] = useState<'categoria' | 'categoria-insumo' | 'unidade' | 'usuario'>('categoria')
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -122,6 +135,7 @@ export default function ConfiguracoesPage() {
             <DialogHeader>
               <DialogTitle>
                 {dialogType === 'categoria' && 'Nova Categoria'}
+                {dialogType === 'categoria-insumo' && 'Nova Categoria de Insumo'}
                 {dialogType === 'unidade' && 'Nova Unidade de Medida'}
                 {dialogType === 'usuario' && 'Novo Usuário'}
               </DialogTitle>
@@ -139,6 +153,19 @@ export default function ConfiguracoesPage() {
                   <div className="space-y-2">
                     <Label htmlFor="desc-cat">Descrição</Label>
                     <Input id="desc-cat" placeholder="Descrição da categoria" />
+                  </div>
+                </>
+              )}
+
+              {dialogType === 'categoria-insumo' && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="nome-cat-insumo">Nome da Categoria</Label>
+                    <Input id="nome-cat-insumo" placeholder="Ex: Farinhas" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="desc-cat-insumo">Descrição</Label>
+                    <Input id="desc-cat-insumo" placeholder="Descrição da categoria de insumo" />
                   </div>
                 </>
               )}
@@ -195,6 +222,7 @@ export default function ConfiguracoesPage() {
       <Tabs defaultValue="categorias" className="space-y-4">
         <TabsList>
           <TabsTrigger value="categorias">Categorias de Receitas</TabsTrigger>
+          <TabsTrigger value="categorias-insumos">Categorias de Insumos</TabsTrigger>
           <TabsTrigger value="unidades">Unidades de Medida</TabsTrigger>
           <TabsTrigger value="usuarios">Usuários</TabsTrigger>
         </TabsList>
@@ -248,6 +276,55 @@ export default function ConfiguracoesPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="categorias-insumos" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                Categorias de Insumos ({categoriasInsumos.length})
+              </CardTitle>
+              <CardDescription>
+                Gerencie as categorias para organizar seus insumos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categoriasInsumos.map((categoria) => (
+                    <TableRow key={categoria.id}>
+                      <TableCell className="font-medium">{categoria.nome}</TableCell>
+                      <TableCell>{categoria.descricao}</TableCell>
+                      <TableCell>
+                        <Badge variant={categoria.ativa ? 'default' : 'secondary'}>
+                          {categoria.ativa ? 'Ativa' : 'Inativa'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="unidades" className="space-y-4">
           <Card>
             <CardHeader>
@@ -256,7 +333,7 @@ export default function ConfiguracoesPage() {
                 Unidades de Medida ({unidades.length})
               </CardTitle>
               <CardDescription>
-                Gerencie as unidades de medida para ingredientes e produtos
+                Gerencie as unidades de medida para ingredientes e insumos
               </CardDescription>
             </CardHeader>
             <CardContent>

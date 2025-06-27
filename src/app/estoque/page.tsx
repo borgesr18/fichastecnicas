@@ -44,7 +44,7 @@ interface MovimentacaoEstoque {
 }
 
 export default function EstoquePage() {
-  const [movimentacoes, setMovimentacoes] = useState<MovimentacaoEstoque[]>([
+  const [movimentacoes] = useState<MovimentacaoEstoque[]>([
     {
       id: '1',
       produto: 'Farinha de Trigo',
@@ -82,7 +82,7 @@ export default function EstoquePage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Controle de Estoque</h1>
           <p className="text-muted-foreground">
-            Gerencie entradas e saídas de produtos
+            Gerencie entradas e saídas de insumos
           </p>
         </div>
         <div className="flex space-x-2">
@@ -154,14 +154,14 @@ export default function EstoquePage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total de Produtos
+              Total de Insumos
             </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">24</div>
             <p className="text-xs text-muted-foreground">
-              Produtos cadastrados
+              Insumos cadastrados
             </p>
           </CardContent>
         </Card>
