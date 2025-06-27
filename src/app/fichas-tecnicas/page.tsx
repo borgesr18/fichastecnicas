@@ -89,6 +89,18 @@ export default function FichasTecnicasPage() {
 
   const handleCreateFicha = async (formData: FormData) => {
     try {
+      const userData = localStorage.getItem('user-data')
+      let userId = 'cmcf4w2yj0003qhzr8vt0gz9l' // Default to existing user in database
+      
+      if (userData) {
+        try {
+          const user = JSON.parse(userData)
+          userId = user.id === '1' ? 'cmcf4w2yj0003qhzr8vt0gz9l' : user.id
+        } catch {
+          userId = 'cmcf4w2yj0003qhzr8vt0gz9l'
+        }
+      }
+      
       const response = await fetch('/api/fichas-tecnicas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,7 +111,7 @@ export default function FichasTecnicasPage() {
           unidadeRendimento: formData.get('unidadeRendimento'),
           modoPreparo: formData.get('modoPreparo'),
           tempoPreparoMin: formData.get('tempoPreparo'),
-          userId: 'default-user-id'
+          userId: userId
         })
       })
       
@@ -109,6 +121,22 @@ export default function FichasTecnicasPage() {
       setIsDialogOpen(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create ficha técnica')
+    }
+  }
+
+  const handleDeleteFicha = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta ficha técnica?')) return
+    
+    try {
+      const response = await fetch(`/api/fichas-tecnicas/${id}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) throw new Error('Failed to delete ficha técnica')
+      
+      await fetchFichas()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete ficha técnica')
     }
   }
 
@@ -211,6 +239,18 @@ export default function FichasTecnicasPage() {
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Ingredientes</Label>
+                    <Button type="button" variant="outline" size="sm">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Adicionar Ingrediente
+                    </Button>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Adicione ingredientes após criar a ficha técnica
+                  </div>
+                </div>
               </div>
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -281,16 +321,16 @@ export default function FichasTecnicasPage() {
                     <TableCell>{ficha.ingredientes} itens</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => window.open(`/fichas-tecnicas/${ficha.id}/ingredientes`, '_blank')}>
                           <FileText className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => window.print()}>
                           <Printer className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => window.location.href = `/fichas-tecnicas/${ficha.id}/edit`}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" className="text-destructive">
+                        <Button variant="outline" size="sm" className="text-destructive" onClick={() => handleDeleteFicha(ficha.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

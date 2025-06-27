@@ -105,7 +105,10 @@ export default function EstoquePage() {
           unidadeMedidaId: produtoSelecionado?.unidadeMedida.id,
           observacao: formData.get('motivo'),
           valorUnitario: formData.get('valorUnitario'),
-          userId: 'default-user-id'
+          userId: (() => {
+            const userData = localStorage.getItem('user-data')
+            return userData ? JSON.parse(userData).id : 'cmcf4w2yj0003qhzr8vt0gz9l'
+          })()
         })
       })
       
