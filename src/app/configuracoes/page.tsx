@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -68,31 +68,52 @@ interface Usuario {
 }
 
 export default function ConfiguracoesPage() {
-  const [categorias] = useState<Categoria[]>([
-    { id: '1', nome: 'Sobremesas', descricao: 'Doces e sobremesas', ativa: true },
-    { id: '2', nome: 'Pratos Principais', descricao: 'Pratos principais', ativa: true },
-    { id: '3', nome: 'Entradas', descricao: 'Aperitivos e entradas', ativa: true }
-  ])
+  const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [unidades, setUnidades] = useState<UnidadeMedida[]>([])
+  const [categoriasInsumos, setCategoriasInsumos] = useState<CategoriaInsumo[]>([])
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const [unidades] = useState<UnidadeMedida[]>([
-    { id: '1', nome: 'Quilograma', simbolo: 'kg', tipo: 'Peso' },
-    { id: '2', nome: 'Litro', simbolo: 'L', tipo: 'Volume' },
-    { id: '3', nome: 'Unidade', simbolo: 'un', tipo: 'Quantidade' },
-    { id: '4', nome: 'Grama', simbolo: 'g', tipo: 'Peso' }
-  ])
+  useEffect(() => {
+    fetchData()
+  }, [])
 
-  const [categoriasInsumos] = useState<CategoriaInsumo[]>([
-    { id: '1', nome: 'Farinhas', descricao: 'Farinhas e derivados', ativa: true },
-    { id: '2', nome: 'Açúcares', descricao: 'Açúcares e adoçantes', ativa: true },
-    { id: '3', nome: 'Chocolates', descricao: 'Chocolates e cacau', ativa: true },
-    { id: '4', nome: 'Laticínios', descricao: 'Leites, queijos e derivados', ativa: true }
-  ])
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [categoriasRes, unidadesRes] = await Promise.all([
+        fetch('/api/categorias-insumos'),
+        fetch('/api/unidades')
+      ])
 
-  const [usuarios] = useState<Usuario[]>([
-    { id: '1', nome: 'Administrador', email: 'admin@sistemachef.com', role: 'admin', ativo: true },
-    { id: '2', nome: 'Editor', email: 'editor@sistemachef.com', role: 'editor', ativo: true },
-    { id: '3', nome: 'Visualizador', email: 'viewer@sistemachef.com', role: 'viewer', ativo: false }
-  ])
+      if (!categoriasRes.ok || !unidadesRes.ok) {
+        throw new Error('Failed to fetch data')
+      }
+
+      const [categoriasData, unidadesData] = await Promise.all([
+        categoriasRes.json(),
+        unidadesRes.json()
+      ])
+
+      setCategorias([
+        { id: '1', nome: 'Sobremesas', descricao: 'Doces e sobremesas', ativa: true },
+        { id: '2', nome: 'Pratos Principais', descricao: 'Pratos principais', ativa: true },
+        { id: '3', nome: 'Entradas', descricao: 'Aperitivos e entradas', ativa: true }
+      ])
+      setUnidades(unidadesData.map((u: any) => ({ ...u, ativa: true })))
+      setCategoriasInsumos(categoriasData.map((c: any) => ({ ...c, ativa: true })))
+      setUsuarios([
+        { id: '1', nome: 'Administrador', email: 'admin@sistemachef.com', role: 'admin', ativo: true },
+        { id: '2', nome: 'Editor', email: 'editor@sistemachef.com', role: 'editor', ativo: true },
+        { id: '3', nome: 'Visualizador', email: 'viewer@sistemachef.com', role: 'viewer', ativo: false }
+      ])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [dialogType] = useState<'categoria' | 'categoria-insumo' | 'unidade' | 'usuario'>('categoria')
