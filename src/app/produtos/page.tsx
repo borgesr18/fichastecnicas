@@ -99,7 +99,7 @@ export default function ProdutosPage() {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Produtos</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Insumos</h1>
           <p className="text-muted-foreground">
             Gerencie seus insumos e ingredientes
           </p>
@@ -108,20 +108,20 @@ export default function ProdutosPage() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Novo Produto
+              Novo Insumo
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Novo Produto</DialogTitle>
+              <DialogTitle>Novo Insumo</DialogTitle>
               <DialogDescription>
-                Cadastre um novo produto/insumo
+                Cadastre um novo insumo
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nome">Nome do Produto</Label>
+                  <Label htmlFor="nome">Nome do Insumo</Label>
                   <Input id="nome" placeholder="Ex: Farinha de Trigo" />
                 </div>
                 <div className="space-y-2">
@@ -148,7 +148,7 @@ export default function ProdutosPage() {
                   Cancelar
                 </Button>
                 <Button onClick={() => setIsDialogOpen(false)}>
-                  Cadastrar Produto
+                  Cadastrar Insumo
                 </Button>
               </div>
             </div>
@@ -161,7 +161,7 @@ export default function ProdutosPage() {
           <CardHeader>
             <CardTitle>Filtros</CardTitle>
             <CardDescription>
-              Encontre rapidamente seus produtos
+              Encontre rapidamente seus insumos
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -179,9 +179,9 @@ export default function ProdutosPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Produtos ({filteredProdutos.length})</CardTitle>
+            <CardTitle>Insumos ({filteredProdutos.length})</CardTitle>
             <CardDescription>
-              Lista de todos os produtos cadastrados
+              Lista de todos os insumos cadastrados
             </CardDescription>
           </CardHeader>
           <CardContent>

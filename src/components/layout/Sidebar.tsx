@@ -22,7 +22,7 @@ import {
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Fichas Técnicas', href: '/fichas-tecnicas', icon: FileText },
-  { name: 'Produtos', href: '/produtos', icon: ChefHat },
+  { name: 'Insumos', href: '/produtos', icon: ChefHat },
   { name: 'Estoque', href: '/estoque', icon: Package },
   { name: 'Produção', href: '/producao', icon: Factory },
   { name: 'Preços', href: '/precos', icon: DollarSign },

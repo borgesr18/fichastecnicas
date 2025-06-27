@@ -50,7 +50,7 @@ export default function DashboardPage() {
     }
   ]
 
-  const produtosBaixoEstoque = [
+  const insumosBaixoEstoque = [
     {
       id: '1',
       nome: 'Chocolate em Pó',
@@ -120,7 +120,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Produtos em Estoque
+              Insumos em Estoque
             </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -218,13 +218,13 @@ export default function DashboardPage() {
                     Estoque Baixo
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {produtosBaixoEstoque.length} itens com estoque baixo
+                    {insumosBaixoEstoque.length} itens com estoque baixo
                   </p>
                 </div>
               </div>
               
               <div className="space-y-2">
-                {produtosBaixoEstoque.map((produto) => (
+                {insumosBaixoEstoque.map((produto) => (
                   <div key={produto.id} className="flex items-center justify-between text-sm">
                     <span>{produto.nome}</span>
                     <Badge variant="destructive">
