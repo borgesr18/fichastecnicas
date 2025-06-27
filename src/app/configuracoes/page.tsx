@@ -72,8 +72,8 @@ export default function ConfiguracoesPage() {
   const [unidades, setUnidades] = useState<UnidadeMedida[]>([])
   const [categoriasInsumos, setCategoriasInsumos] = useState<CategoriaInsumo[]>([])
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [, setLoading] = useState(true)
+  const [, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -101,8 +101,8 @@ export default function ConfiguracoesPage() {
         { id: '2', nome: 'Pratos Principais', descricao: 'Pratos principais', ativa: true },
         { id: '3', nome: 'Entradas', descricao: 'Aperitivos e entradas', ativa: true }
       ])
-      setUnidades(unidadesData.map((u: any) => ({ ...u, ativa: true })))
-      setCategoriasInsumos(categoriasData.map((c: any) => ({ ...c, ativa: true })))
+      setUnidades(unidadesData.map((u: { id: string; nome: string; simbolo: string; tipo: string }) => ({ ...u, ativa: true })))
+      setCategoriasInsumos(categoriasData.map((c: { id: string; nome: string; descricao: string }) => ({ ...c, ativa: true })))
       setUsuarios([
         { id: '1', nome: 'Administrador', email: 'admin@sistemachef.com', role: 'admin', ativo: true },
         { id: '2', nome: 'Editor', email: 'editor@sistemachef.com', role: 'editor', ativo: true },

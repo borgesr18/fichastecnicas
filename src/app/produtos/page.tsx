@@ -310,7 +310,7 @@ export default function ProdutosPage() {
                   {filteredProdutos.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        Nenhum insumo encontrado. Cadastre o primeiro insumo clicando em "Novo Insumo".
+                        Nenhum insumo encontrado. Cadastre o primeiro insumo clicando em &quot;Novo Insumo&quot;.
                       </TableCell>
                     </TableRow>
                   ) : (

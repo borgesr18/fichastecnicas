@@ -3,14 +3,15 @@ import { prisma } from '@/lib/prisma'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json()
-    const { nome, categoriaId, unidadeId, custoUnitario, estoqueMinimo, status } = body
+    const { nome, categoriaId, unidadeId, custoUnitario, estoqueMinimo } = body
     
+    const resolvedParams = await params
     const produto = await prisma.insumo.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         nome,
         categoriaInsumoId: categoriaId,
@@ -33,11 +34,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     await prisma.insumo.delete({
-      where: { id: params.id }
+      where: { id: resolvedParams.id }
     })
     
     return NextResponse.json({ message: 'Produto deleted successfully' })
