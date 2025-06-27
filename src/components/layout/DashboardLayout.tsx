@@ -30,7 +30,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex flex-col w-full ml-[220px] lg:ml-[280px]">
         <header className="fixed top-0 right-0 z-40 flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6" style={{left: '220px', width: 'calc(100% - 220px)'}}>
           <div className="w-full flex-1">
-            <h1 className="text-lg font-semibold md:text-2xl">SistemaChef</h1>
+            <h1 className="text-lg font-semibold md:text-2xl">SistemaChef – Seu sistema de controle de fichas técnicas</h1>
           </div>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 mt-14 lg:mt-[60px] overflow-auto">
