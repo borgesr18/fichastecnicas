@@ -43,7 +43,7 @@ interface Produto {
 }
 
 export default function ProdutosPage() {
-  const [produtos, setProdutos] = useState<Produto[]>([
+  const [produtos] = useState<Produto[]>([
     {
       id: '1',
       nome: 'Farinha de Trigo',

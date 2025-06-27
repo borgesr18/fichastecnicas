@@ -25,7 +25,6 @@ import {
 import { 
   BarChart3,
   Download,
-  Calendar,
   TrendingUp,
   Package,
   Factory,

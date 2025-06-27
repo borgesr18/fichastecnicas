@@ -48,7 +48,7 @@ interface Preco {
 }
 
 export default function PrecosPage() {
-  const [precos, setPrecos] = useState<Preco[]>([
+  const [precos] = useState<Preco[]>([
     {
       id: '1',
       produto: 'Bolo de Chocolate',

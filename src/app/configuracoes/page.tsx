@@ -33,7 +33,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Settings,
   Users,
   Tag,
   Ruler
@@ -69,34 +68,34 @@ interface Usuario {
 }
 
 export default function ConfiguracoesPage() {
-  const [categorias, setCategorias] = useState<Categoria[]>([
+  const [categorias] = useState<Categoria[]>([
     { id: '1', nome: 'Sobremesas', descricao: 'Doces e sobremesas', ativa: true },
     { id: '2', nome: 'Pratos Principais', descricao: 'Pratos principais', ativa: true },
     { id: '3', nome: 'Entradas', descricao: 'Aperitivos e entradas', ativa: true }
   ])
 
-  const [unidades, setUnidades] = useState<UnidadeMedida[]>([
+  const [unidades] = useState<UnidadeMedida[]>([
     { id: '1', nome: 'Quilograma', simbolo: 'kg', tipo: 'Peso' },
     { id: '2', nome: 'Litro', simbolo: 'L', tipo: 'Volume' },
     { id: '3', nome: 'Unidade', simbolo: 'un', tipo: 'Quantidade' },
     { id: '4', nome: 'Grama', simbolo: 'g', tipo: 'Peso' }
   ])
 
-  const [categoriasInsumos, setCategoriasInsumos] = useState<CategoriaInsumo[]>([
+  const [categoriasInsumos] = useState<CategoriaInsumo[]>([
     { id: '1', nome: 'Farinhas', descricao: 'Farinhas e derivados', ativa: true },
     { id: '2', nome: 'Açúcares', descricao: 'Açúcares e adoçantes', ativa: true },
     { id: '3', nome: 'Chocolates', descricao: 'Chocolates e cacau', ativa: true },
     { id: '4', nome: 'Laticínios', descricao: 'Leites, queijos e derivados', ativa: true }
   ])
 
-  const [usuarios, setUsuarios] = useState<Usuario[]>([
+  const [usuarios] = useState<Usuario[]>([
     { id: '1', nome: 'Administrador', email: 'admin@sistemachef.com', role: 'admin', ativo: true },
     { id: '2', nome: 'Editor', email: 'editor@sistemachef.com', role: 'editor', ativo: true },
     { id: '3', nome: 'Visualizador', email: 'viewer@sistemachef.com', role: 'viewer', ativo: false }
   ])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [dialogType, setDialogType] = useState<'categoria' | 'categoria-insumo' | 'unidade' | 'usuario'>('categoria')
+  const [dialogType] = useState<'categoria' | 'categoria-insumo' | 'unidade' | 'usuario'>('categoria')
 
   const getRoleColor = (role: string) => {
     switch (role) {

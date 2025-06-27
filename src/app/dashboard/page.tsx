@@ -18,7 +18,6 @@ import {
   Package, 
   Factory, 
   DollarSign,
-  TrendingUp,
   AlertTriangle,
   Plus,
   ArrowRight

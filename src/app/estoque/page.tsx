@@ -44,7 +44,7 @@ interface MovimentacaoEstoque {
 }
 
 export default function EstoquePage() {
-  const [movimentacoes, setMovimentacoes] = useState<MovimentacaoEstoque[]>([
+  const [movimentacoes] = useState<MovimentacaoEstoque[]>([
     {
       id: '1',
       produto: 'Farinha de Trigo',

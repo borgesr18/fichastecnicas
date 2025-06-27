@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (authToken && userData) {
         try {
           setUser(JSON.parse(userData))
-        } catch (error) {
+        } catch {
           localStorage.removeItem('auth-token')
           localStorage.removeItem('user-data')
         }
