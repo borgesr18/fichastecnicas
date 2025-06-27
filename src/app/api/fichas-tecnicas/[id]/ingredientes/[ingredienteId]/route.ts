@@ -24,23 +24,22 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { quantidade, fatorConversao, custoUnitario } = body
+    const { quantidade, fatorConversao } = body
     
     const resolvedParams = await params
     const ingrediente = await prisma.ingredienteFichaTecnica.update({
       where: { id: resolvedParams.ingredienteId },
       data: {
         quantidade,
-        fatorConversao,
-        custoUnitario,
-        custoTotal: quantidade * custoUnitario * fatorConversao
+        fatorConversao
       },
       include: {
-        produto: {
+        insumo: {
           include: {
             unidadeMedida: true
           }
-        }
+        },
+        unidadeMedida: true
       }
     })
     

@@ -213,7 +213,7 @@ export default function IngredientesFichaTecnicaPage({ params }: { params: Promi
                 Ingredientes - {ficha?.nome}
               </h1>
               <p className="text-muted-foreground">
-                Categoria: {ficha?.categoriaReceita.nome}
+                Categoria: {ficha?.categoria.nome}
               </p>
             </div>
           </div>
