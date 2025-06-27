@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -67,6 +68,7 @@ interface FichaTecnica {
 }
 
 export default function IngredientesFichaTecnicaPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter()
   const [ficha, setFicha] = useState<FichaTecnica | null>(null)
   const [ingredientes, setIngredientes] = useState<Ingrediente[]>([])
   const [insumos, setInsumos] = useState<Insumo[]>([])
@@ -177,6 +179,27 @@ export default function IngredientesFichaTecnicaPage({ params }: { params: Promi
     }
   }
 
+  const handleEditIngrediente = async (id: string, quantidade: number, fatorConversao: number) => {
+    if (!resolvedParams) return
+    
+    try {
+      const response = await fetch(`/api/fichas-tecnicas/${resolvedParams.id}/ingredientes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quantidade,
+          fatorConversao
+        })
+      })
+      
+      if (!response.ok) throw new Error('Failed to update ingrediente')
+      
+      await fetchIngredientes()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update ingrediente')
+    }
+  }
+
   const custoTotal = ingredientes.reduce((total, ing) => total + (ing.quantidade * ing.fatorConversao), 0)
 
   if (loading) {
@@ -204,7 +227,7 @@ export default function IngredientesFichaTecnicaPage({ params }: { params: Promi
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={() => window.history.back()}>
+            <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Button>
@@ -304,7 +327,13 @@ export default function IngredientesFichaTecnicaPage({ params }: { params: Promi
                     <TableCell>{ingrediente.fatorConversao}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => {
+                          const novaQuantidade = prompt('Nova quantidade:', ingrediente.quantidade.toString())
+                          const novoFator = prompt('Novo fator de conversão:', ingrediente.fatorConversao.toString())
+                          if (novaQuantidade && novoFator) {
+                            handleEditIngrediente(ingrediente.id, parseFloat(novaQuantidade), parseFloat(novoFator))
+                          }
+                        }}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button variant="outline" size="sm" className="text-destructive" onClick={() => handleDeleteIngrediente(ingrediente.id)}>
