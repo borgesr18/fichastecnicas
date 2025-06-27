@@ -61,7 +61,7 @@ interface Insumo {
 interface FichaTecnica {
   id: string
   nome: string
-  categoria: {
+  categoriaReceita: {
     nome: string
   }
 }
@@ -213,7 +213,7 @@ export default function IngredientesFichaTecnicaPage({ params }: { params: Promi
                 Ingredientes - {ficha?.nome}
               </h1>
               <p className="text-muted-foreground">
-                Categoria: {ficha?.categoria.nome}
+                Categoria: {ficha?.categoriaReceita.nome}
               </p>
             </div>
           </div>
