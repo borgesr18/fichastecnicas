@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -43,38 +43,109 @@ interface MovimentacaoEstoque {
   usuario: string
 }
 
+interface Produto {
+  id: string
+  nome: string
+  unidadeMedida: {
+    id: string
+    simbolo: string
+  }
+}
+
 export default function EstoquePage() {
-  const [movimentacoes] = useState<MovimentacaoEstoque[]>([
-    {
-      id: '1',
-      produto: 'Farinha de Trigo',
-      tipo: 'entrada',
-      quantidade: 10,
-      unidade: 'kg',
-      motivo: 'Compra - Fornecedor ABC',
-      data: '2024-06-27',
-      usuario: 'admin@sistemachef.com'
-    },
-    {
-      id: '2',
-      produto: 'Açúcar Cristal',
-      tipo: 'saida',
-      quantidade: 2,
-      unidade: 'kg',
-      motivo: 'Produção - Bolo de Chocolate',
-      data: '2024-06-27',
-      usuario: 'admin@sistemachef.com'
-    }
-  ])
+  const [movimentacoes, setMovimentacoes] = useState<MovimentacaoEstoque[]>([])
+  const [produtos, setProdutos] = useState<Produto[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [tipoMovimentacao, setTipoMovimentacao] = useState<'entrada' | 'saida'>('entrada')
 
+  useEffect(() => {
+    fetchMovimentacoes()
+    fetchProdutos()
+  }, [])
+
+  const fetchMovimentacoes = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/estoque')
+      if (!response.ok) throw new Error('Failed to fetch movimentações')
+      const data = await response.json()
+      setMovimentacoes(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchProdutos = async () => {
+    try {
+      const response = await fetch('/api/produtos')
+      if (!response.ok) throw new Error('Failed to fetch produtos')
+      const data = await response.json()
+      setProdutos(data)
+    } catch (err) {
+      console.error('Error fetching produtos:', err)
+    }
+  }
+
+  const handleCreateMovimentacao = async (formData: FormData) => {
+    try {
+      const produtoSelecionado = produtos.find(p => p.id === formData.get('produto'))
+      const response = await fetch('/api/estoque', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          insumoId: formData.get('produto'),
+          tipo: tipoMovimentacao,
+          quantidade: formData.get('quantidade'),
+          unidadeMedidaId: produtoSelecionado?.unidadeMedida.id,
+          observacao: formData.get('motivo'),
+          valorUnitario: formData.get('valorUnitario'),
+          userId: 'default-user-id'
+        })
+      })
+      
+      if (!response.ok) throw new Error('Failed to create movimentação')
+      
+      await fetchMovimentacoes()
+      setIsDialogOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create movimentação')
+    }
+  }
+
   const filteredMovimentacoes = movimentacoes.filter(mov =>
     mov.produto.toLowerCase().includes(searchTerm.toLowerCase()) ||
     mov.motivo.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const totalEstoque = movimentacoes.length
+  const entradasHoje = movimentacoes.filter(m => m.tipo === 'entrada' && m.data === new Date().toISOString().split('T')[0]).length
+  const saidasHoje = movimentacoes.filter(m => m.tipo === 'saida' && m.data === new Date().toISOString().split('T')[0]).length
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Carregando movimentações...</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-red-600">Erro: {error}</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>
@@ -110,41 +181,61 @@ export default function EstoquePage() {
                   Registre uma {tipoMovimentacao} de produto no estoque
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="produto">Produto</Label>
-                  <Input id="produto" placeholder="Selecione o produto" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.currentTarget)
+                handleCreateMovimentacao(formData)
+              }}>
+                <div className="grid gap-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="quantidade">Quantidade</Label>
-                    <Input id="quantidade" type="number" placeholder="0" />
+                    <Label htmlFor="produto">Produto</Label>
+                    <select
+                      id="produto"
+                      name="produto"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      required
+                    >
+                      <option value="">Selecione um produto</option>
+                      {produtos.map((produto) => (
+                        <option key={produto.id} value={produto.id}>
+                          {produto.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="quantidade">Quantidade</Label>
+                      <Input id="quantidade" name="quantidade" type="number" step="0.01" placeholder="0" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="valorUnitario">Valor Unitário</Label>
+                      <Input id="valorUnitario" name="valorUnitario" type="number" step="0.01" placeholder="0.00" />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="unidade">Unidade</Label>
-                    <Input id="unidade" placeholder="kg, L, un" disabled />
+                    <Label htmlFor="motivo">Motivo</Label>
+                    <Input 
+                      id="motivo" 
+                      name="motivo"
+                      placeholder={
+                        tipoMovimentacao === 'entrada' 
+                          ? "Ex: Compra - Fornecedor XYZ" 
+                          : "Ex: Produção - Nome da Receita"
+                      }
+                      required
+                    />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="motivo">Motivo</Label>
-                  <Input 
-                    id="motivo" 
-                    placeholder={
-                      tipoMovimentacao === 'entrada' 
-                        ? "Ex: Compra - Fornecedor XYZ" 
-                        : "Ex: Produção - Nome da Receita"
-                    } 
-                  />
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button onClick={() => setIsDialogOpen(false)}>
+                  <Button type="submit">
                     Registrar {tipoMovimentacao === 'entrada' ? 'Entrada' : 'Saída'}
                   </Button>
                 </div>
-              </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -154,14 +245,14 @@ export default function EstoquePage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total de Insumos
+              Total de Movimentações
             </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-2xl font-bold">{totalEstoque}</div>
             <p className="text-xs text-muted-foreground">
-              Insumos cadastrados
+              Movimentações registradas
             </p>
           </CardContent>
         </Card>
@@ -174,7 +265,7 @@ export default function EstoquePage() {
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1</div>
+            <div className="text-2xl font-bold">{entradasHoje}</div>
             <p className="text-xs text-muted-foreground">
               Movimentações de entrada
             </p>
@@ -189,7 +280,7 @@ export default function EstoquePage() {
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1</div>
+            <div className="text-2xl font-bold">{saidasHoje}</div>
             <p className="text-xs text-muted-foreground">
               Movimentações de saída
             </p>
@@ -199,14 +290,14 @@ export default function EstoquePage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Valor Total
+              Produtos Cadastrados
             </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 1.245,80</div>
+            <div className="text-2xl font-bold">{produtos.length}</div>
             <p className="text-xs text-muted-foreground">
-              Valor total em estoque
+              Insumos disponíveis
             </p>
           </CardContent>
         </Card>

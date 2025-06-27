@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,75 +24,129 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { 
   Plus,
   Search,
   Edit,
   Trash2,
-  Package
+  Package,
+  Loader2
 } from 'lucide-react'
+
+interface Categoria {
+  id: string
+  nome: string
+}
+
+interface Unidade {
+  id: string
+  nome: string
+  simbolo: string
+}
 
 interface Produto {
   id: string
   nome: string
-  categoria: string
-  unidade: string
+  categoriaInsumo: Categoria
+  unidadeMedida: Unidade
   custoUnitario: number
-  estoque: number
+  estoqueAtual: number
   estoqueMinimo: number
-  status: 'ativo' | 'inativo'
 }
 
 export default function ProdutosPage() {
-  const [produtos] = useState<Produto[]>([
-    {
-      id: '1',
-      nome: 'Farinha de Trigo',
-      categoria: 'Farinhas',
-      unidade: 'kg',
-      custoUnitario: 4.50,
-      estoque: 25,
-      estoqueMinimo: 5,
-      status: 'ativo'
-    },
-    {
-      id: '2',
-      nome: 'Açúcar Cristal',
-      categoria: 'Açúcares',
-      unidade: 'kg',
-      custoUnitario: 3.20,
-      estoque: 15,
-      estoqueMinimo: 10,
-      status: 'ativo'
-    },
-    {
-      id: '3',
-      nome: 'Chocolate em Pó',
-      categoria: 'Chocolates',
-      unidade: 'kg',
-      custoUnitario: 12.80,
-      estoque: 3,
-      estoqueMinimo: 5,
-      status: 'ativo'
-    }
-  ])
-  
+  const [produtos, setProdutos] = useState<Produto[]>([])
+  const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [unidades, setUnidades] = useState<Unidade[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [formData, setFormData] = useState({
+    nome: '',
+    categoriaId: '',
+    unidadeId: '',
+    custoUnitario: '',
+    estoqueMinimo: ''
+  })
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [produtosRes, categoriasRes, unidadesRes] = await Promise.all([
+        fetch('/api/produtos'),
+        fetch('/api/categorias-insumos'),
+        fetch('/api/unidades')
+      ])
+
+      if (!produtosRes.ok || !categoriasRes.ok || !unidadesRes.ok) {
+        throw new Error('Failed to fetch data')
+      }
+
+      const [produtosData, categoriasData, unidadesData] = await Promise.all([
+        produtosRes.json(),
+        categoriasRes.json(),
+        unidadesRes.json()
+      ])
+
+      setProdutos(produtosData)
+      setCategorias(categoriasData)
+      setUnidades(unidadesData)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateProduto = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const response = await fetch('/api/produtos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      
+      if (!response.ok) throw new Error('Failed to create produto')
+      
+      await fetchData()
+      setIsDialogOpen(false)
+      setFormData({
+        nome: '',
+        categoriaId: '',
+        unidadeId: '',
+        custoUnitario: '',
+        estoqueMinimo: ''
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create produto')
+    }
+  }
 
   const filteredProdutos = produtos.filter(produto =>
     produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    produto.categoria.toLowerCase().includes(searchTerm.toLowerCase())
+    produto.categoriaInsumo.nome.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const getStatusColor = (produto: Produto) => {
-    if (produto.estoque <= produto.estoqueMinimo) return 'destructive'
-    if (produto.status === 'inativo') return 'secondary'
+    if (produto.estoqueAtual <= produto.estoqueMinimo) return 'destructive'
     return 'default'
   }
 
   const getStatusText = (produto: Produto) => {
-    if (produto.estoque <= produto.estoqueMinimo) return 'Estoque Baixo'
-    return produto.status === 'ativo' ? 'Ativo' : 'Inativo'
+    if (produto.estoqueAtual <= produto.estoqueMinimo) return 'Estoque Baixo'
+    return 'Ativo'
   }
 
   return (
@@ -118,40 +172,83 @@ export default function ProdutosPage() {
                 Cadastre um novo insumo
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <form onSubmit={handleCreateProduto} className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="nome">Nome do Insumo</Label>
-                  <Input id="nome" placeholder="Ex: Farinha de Trigo" />
+                  <Input 
+                    id="nome" 
+                    placeholder="Ex: Farinha de Trigo"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({...formData, nome: e.target.value})}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="categoria">Categoria</Label>
-                  <Input id="categoria" placeholder="Ex: Farinhas" />
+                  <Select value={formData.categoriaId} onValueChange={(value) => setFormData({...formData, categoriaId: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categorias.map((categoria) => (
+                        <SelectItem key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="unidade">Unidade</Label>
-                  <Input id="unidade" placeholder="kg, L, un" />
+                  <Select value={formData.unidadeId} onValueChange={(value) => setFormData({...formData, unidadeId: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {unidades.map((unidade) => (
+                        <SelectItem key={unidade.id} value={unidade.id}>
+                          {unidade.nome} ({unidade.simbolo})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="custo">Custo Unitário</Label>
-                  <Input id="custo" type="number" step="0.01" placeholder="0.00" />
+                  <Input 
+                    id="custo" 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="0.00"
+                    value={formData.custoUnitario}
+                    onChange={(e) => setFormData({...formData, custoUnitario: e.target.value})}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="minimo">Estoque Mínimo</Label>
-                  <Input id="minimo" type="number" placeholder="5" />
+                  <Input 
+                    id="minimo" 
+                    type="number" 
+                    placeholder="5"
+                    value={formData.estoqueMinimo}
+                    onChange={(e) => setFormData({...formData, estoqueMinimo: e.target.value})}
+                    required
+                  />
                 </div>
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={() => setIsDialogOpen(false)}>
+                <Button type="submit">
                   Cadastrar Insumo
                 </Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -185,52 +282,72 @@ export default function ProdutosPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Unidade</TableHead>
-                  <TableHead>Custo Unitário</TableHead>
-                  <TableHead>Estoque Atual</TableHead>
-                  <TableHead>Estoque Mínimo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProdutos.map((produto) => (
-                  <TableRow key={produto.id}>
-                    <TableCell className="font-medium">{produto.nome}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{produto.categoria}</Badge>
-                    </TableCell>
-                    <TableCell>{produto.unidade}</TableCell>
-                    <TableCell>R$ {produto.custoUnitario.toFixed(2)}</TableCell>
-                    <TableCell>{produto.estoque} {produto.unidade}</TableCell>
-                    <TableCell>{produto.estoqueMinimo} {produto.unidade}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusColor(produto)}>
-                        {getStatusText(produto)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Package className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-600">{error}</p>
+              </div>
+            )}
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">Carregando insumos...</span>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Unidade</TableHead>
+                    <TableHead>Custo Unitário</TableHead>
+                    <TableHead>Estoque Atual</TableHead>
+                    <TableHead>Estoque Mínimo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredProdutos.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        Nenhum insumo encontrado. Cadastre o primeiro insumo clicando em &quot;Novo Insumo&quot;.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredProdutos.map((produto) => (
+                      <TableRow key={produto.id}>
+                        <TableCell className="font-medium">{produto.nome}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{produto.categoriaInsumo.nome}</Badge>
+                        </TableCell>
+                        <TableCell>{produto.unidadeMedida.simbolo}</TableCell>
+                        <TableCell>R$ {Number(produto.custoUnitario).toFixed(2)}</TableCell>
+                        <TableCell>{produto.estoqueAtual} {produto.unidadeMedida.simbolo}</TableCell>
+                        <TableCell>{produto.estoqueMinimo} {produto.unidadeMedida.simbolo}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusColor(produto)}>
+                            {getStatusText(produto)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="outline" size="sm">
+                              <Package className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" className="text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

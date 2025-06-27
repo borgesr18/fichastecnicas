@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -68,34 +68,135 @@ interface Usuario {
 }
 
 export default function ConfiguracoesPage() {
-  const [categorias] = useState<Categoria[]>([
-    { id: '1', nome: 'Sobremesas', descricao: 'Doces e sobremesas', ativa: true },
-    { id: '2', nome: 'Pratos Principais', descricao: 'Pratos principais', ativa: true },
-    { id: '3', nome: 'Entradas', descricao: 'Aperitivos e entradas', ativa: true }
-  ])
+  const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [unidades, setUnidades] = useState<UnidadeMedida[]>([])
+  const [categoriasInsumos, setCategoriasInsumos] = useState<CategoriaInsumo[]>([])
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const [, setLoading] = useState(true)
+  const [, setError] = useState<string | null>(null)
 
-  const [unidades] = useState<UnidadeMedida[]>([
-    { id: '1', nome: 'Quilograma', simbolo: 'kg', tipo: 'Peso' },
-    { id: '2', nome: 'Litro', simbolo: 'L', tipo: 'Volume' },
-    { id: '3', nome: 'Unidade', simbolo: 'un', tipo: 'Quantidade' },
-    { id: '4', nome: 'Grama', simbolo: 'g', tipo: 'Peso' }
-  ])
+  useEffect(() => {
+    fetchData()
+  }, [])
 
-  const [categoriasInsumos] = useState<CategoriaInsumo[]>([
-    { id: '1', nome: 'Farinhas', descricao: 'Farinhas e derivados', ativa: true },
-    { id: '2', nome: 'Açúcares', descricao: 'Açúcares e adoçantes', ativa: true },
-    { id: '3', nome: 'Chocolates', descricao: 'Chocolates e cacau', ativa: true },
-    { id: '4', nome: 'Laticínios', descricao: 'Leites, queijos e derivados', ativa: true }
-  ])
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [categoriasReceitasRes, categoriasRes, unidadesRes] = await Promise.all([
+        fetch('/api/categorias-receitas'),
+        fetch('/api/categorias-insumos'),
+        fetch('/api/unidades')
+      ])
 
-  const [usuarios] = useState<Usuario[]>([
-    { id: '1', nome: 'Administrador', email: 'admin@sistemachef.com', role: 'admin', ativo: true },
-    { id: '2', nome: 'Editor', email: 'editor@sistemachef.com', role: 'editor', ativo: true },
-    { id: '3', nome: 'Visualizador', email: 'viewer@sistemachef.com', role: 'viewer', ativo: false }
-  ])
+      if (!categoriasReceitasRes.ok || !categoriasRes.ok || !unidadesRes.ok) {
+        throw new Error('Failed to fetch data')
+      }
+
+      const [categoriasReceitasData, categoriasData, unidadesData] = await Promise.all([
+        categoriasReceitasRes.json(),
+        categoriasRes.json(),
+        unidadesRes.json()
+      ])
+
+      setCategorias(categoriasReceitasData.map((c: { id: string; nome: string; descricao: string }) => ({ ...c, ativa: true })))
+      setUnidades(unidadesData.map((u: { id: string; nome: string; simbolo: string; tipo: string }) => ({ ...u, ativa: true })))
+      setCategoriasInsumos(categoriasData.map((c: { id: string; nome: string; descricao: string }) => ({ ...c, ativa: true })))
+      setUsuarios([
+        { id: '1', nome: 'Administrador', email: 'admin@sistemachef.com', role: 'admin', ativo: true },
+        { id: '2', nome: 'Editor', email: 'editor@sistemachef.com', role: 'editor', ativo: true },
+        { id: '3', nome: 'Visualizador', email: 'viewer@sistemachef.com', role: 'viewer', ativo: false }
+      ])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [dialogType] = useState<'categoria' | 'categoria-insumo' | 'unidade' | 'usuario'>('categoria')
+  const [dialogType, setDialogType] = useState<'categoria' | 'categoria-insumo' | 'unidade' | 'usuario'>('categoria')
+
+  const handleCreateCategoria = async (formData: FormData) => {
+    try {
+      const response = await fetch('/api/categorias-receitas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: formData.get('nome'),
+          descricao: formData.get('descricao')
+        })
+      })
+      
+      if (!response.ok) throw new Error('Failed to create categoria')
+      
+      await fetchData()
+      setIsDialogOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create categoria')
+    }
+  }
+
+  const handleCreateCategoriaInsumo = async (formData: FormData) => {
+    try {
+      const response = await fetch('/api/categorias-insumos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: formData.get('nome'),
+          descricao: formData.get('descricao')
+        })
+      })
+      
+      if (!response.ok) throw new Error('Failed to create categoria insumo')
+      
+      await fetchData()
+      setIsDialogOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create categoria insumo')
+    }
+  }
+
+  const handleCreateUnidade = async (formData: FormData) => {
+    try {
+      const response = await fetch('/api/unidades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: formData.get('nome'),
+          simbolo: formData.get('simbolo'),
+          tipo: formData.get('tipo')
+        })
+      })
+      
+      if (!response.ok) throw new Error('Failed to create unidade')
+      
+      await fetchData()
+      setIsDialogOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create unidade')
+    }
+  }
+
+  const handleCreateUsuario = async (formData: FormData) => {
+    try {
+      const response = await fetch('/api/usuarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.get('nome'),
+          email: formData.get('email'),
+          role: formData.get('role')
+        })
+      })
+      
+      if (!response.ok) throw new Error('Failed to create usuario')
+      
+      await fetchData()
+      setIsDialogOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create usuario')
+    }
+  }
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -124,99 +225,144 @@ export default function ConfiguracoesPage() {
             Gerencie categorias, unidades de medida e usuários
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {dialogType === 'categoria' && 'Nova Categoria'}
-                {dialogType === 'categoria-insumo' && 'Nova Categoria de Insumo'}
-                {dialogType === 'unidade' && 'Nova Unidade de Medida'}
-                {dialogType === 'usuario' && 'Novo Usuário'}
-              </DialogTitle>
-              <DialogDescription>
-                Cadastre um novo item no sistema
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {dialogType === 'categoria' && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="nome-cat">Nome da Categoria</Label>
-                    <Input id="nome-cat" placeholder="Ex: Sobremesas" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="desc-cat">Descrição</Label>
-                    <Input id="desc-cat" placeholder="Descrição da categoria" />
-                  </div>
-                </>
-              )}
+        <div className="flex space-x-2">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setDialogType('categoria')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Categoria
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={() => setDialogType('categoria-insumo')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Categoria Insumo
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={() => setDialogType('unidade')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Unidade
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={() => setDialogType('usuario')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Usuário
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {dialogType === 'categoria' && 'Nova Categoria de Receita'}
+                  {dialogType === 'categoria-insumo' && 'Nova Categoria de Insumo'}
+                  {dialogType === 'unidade' && 'Nova Unidade de Medida'}
+                  {dialogType === 'usuario' && 'Novo Usuário'}
+                </DialogTitle>
+                <DialogDescription>
+                  Cadastre um novo item no sistema
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.currentTarget)
+                if (dialogType === 'categoria') handleCreateCategoria(formData)
+                else if (dialogType === 'categoria-insumo') handleCreateCategoriaInsumo(formData)
+                else if (dialogType === 'unidade') handleCreateUnidade(formData)
+                else if (dialogType === 'usuario') handleCreateUsuario(formData)
+              }}>
+                <div className="grid gap-4 py-4">
+                  {dialogType === 'categoria' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="nome-cat">Nome da Categoria</Label>
+                        <Input id="nome-cat" name="nome" placeholder="Ex: Sobremesas" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="desc-cat">Descrição</Label>
+                        <Input id="desc-cat" name="descricao" placeholder="Descrição da categoria" />
+                      </div>
+                    </>
+                  )}
 
-              {dialogType === 'categoria-insumo' && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="nome-cat-insumo">Nome da Categoria</Label>
-                    <Input id="nome-cat-insumo" placeholder="Ex: Farinhas" />
+                  {dialogType === 'categoria-insumo' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="nome-cat-insumo">Nome da Categoria</Label>
+                        <Input id="nome-cat-insumo" name="nome" placeholder="Ex: Farinhas" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="desc-cat-insumo">Descrição</Label>
+                        <Input id="desc-cat-insumo" name="descricao" placeholder="Descrição da categoria de insumo" />
+                      </div>
+                    </>
+                  )}
+                  
+                  {dialogType === 'unidade' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="nome-un">Nome</Label>
+                          <Input id="nome-un" name="nome" placeholder="Ex: Quilograma" required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="simbolo-un">Símbolo</Label>
+                          <Input id="simbolo-un" name="simbolo" placeholder="Ex: kg" required />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="tipo-un">Tipo</Label>
+                        <Input id="tipo-un" name="tipo" placeholder="Ex: Peso, Volume, Quantidade" required />
+                      </div>
+                    </>
+                  )}
+                  
+                  {dialogType === 'usuario' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="nome-user">Nome</Label>
+                        <Input id="nome-user" name="nome" placeholder="Nome completo" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email-user">Email</Label>
+                        <Input id="email-user" name="email" type="email" placeholder="email@exemplo.com" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="role-user">Função</Label>
+                        <select
+                          id="role-user"
+                          name="role"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          required
+                        >
+                          <option value="">Selecione uma função</option>
+                          <option value="ADMIN">Administrador</option>
+                          <option value="EDITOR">Editor</option>
+                          <option value="VISUALIZADOR">Visualizador</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit">
+                      Cadastrar
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="desc-cat-insumo">Descrição</Label>
-                    <Input id="desc-cat-insumo" placeholder="Descrição da categoria de insumo" />
-                  </div>
-                </>
-              )}
-              
-              {dialogType === 'unidade' && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="nome-un">Nome</Label>
-                      <Input id="nome-un" placeholder="Ex: Quilograma" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="simbolo-un">Símbolo</Label>
-                      <Input id="simbolo-un" placeholder="Ex: kg" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tipo-un">Tipo</Label>
-                    <Input id="tipo-un" placeholder="Ex: Peso, Volume, Quantidade" />
-                  </div>
-                </>
-              )}
-              
-              {dialogType === 'usuario' && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="nome-user">Nome</Label>
-                    <Input id="nome-user" placeholder="Nome completo" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email-user">Email</Label>
-                    <Input id="email-user" type="email" placeholder="email@exemplo.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="role-user">Função</Label>
-                    <Input id="role-user" placeholder="admin, editor, viewer" />
-                  </div>
-                </>
-              )}
-              
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={() => setIsDialogOpen(false)}>
-                  Cadastrar
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Tabs defaultValue="categorias" className="space-y-4">
