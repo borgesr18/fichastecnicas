@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -43,37 +43,99 @@ interface FichaTecnica {
   ingredientes: number
 }
 
+interface CategoriaReceita {
+  id: string
+  nome: string
+}
+
 export default function FichasTecnicasPage() {
-  const [fichas] = useState<FichaTecnica[]>([
-    {
-      id: '1',
-      nome: 'Bolo de Chocolate',
-      categoria: 'Sobremesas',
-      rendimento: 12,
-      custoTotal: 25.50,
-      custoPorcao: 2.13,
-      tempoPreparo: 60,
-      ingredientes: 8
-    },
-    {
-      id: '2',
-      nome: 'Lasanha Bolonhesa',
-      categoria: 'Pratos Principais',
-      rendimento: 8,
-      custoTotal: 45.80,
-      custoPorcao: 5.73,
-      tempoPreparo: 90,
-      ingredientes: 12
-    }
-  ])
+  const [fichas, setFichas] = useState<FichaTecnica[]>([])
+  const [categorias, setCategorias] = useState<CategoriaReceita[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  useEffect(() => {
+    fetchFichas()
+    fetchCategorias()
+  }, [])
+
+  const fetchFichas = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/fichas-tecnicas')
+      if (!response.ok) throw new Error('Failed to fetch fichas técnicas')
+      const data = await response.json()
+      setFichas(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchCategorias = async () => {
+    try {
+      const response = await fetch('/api/categorias-receitas')
+      if (!response.ok) throw new Error('Failed to fetch categorias')
+      const data = await response.json()
+      setCategorias(data)
+    } catch (err) {
+      console.error('Error fetching categorias:', err)
+    }
+  }
+
+  const handleCreateFicha = async (formData: FormData) => {
+    try {
+      const response = await fetch('/api/fichas-tecnicas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: formData.get('nome'),
+          categoriaReceitaId: formData.get('categoria'),
+          rendimentoTotal: formData.get('rendimento'),
+          unidadeRendimento: formData.get('unidadeRendimento'),
+          modoPreparo: formData.get('modoPreparo'),
+          tempoPreparoMin: formData.get('tempoPreparo'),
+          userId: 'default-user-id'
+        })
+      })
+      
+      if (!response.ok) throw new Error('Failed to create ficha técnica')
+      
+      await fetchFichas()
+      setIsDialogOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create ficha técnica')
+    }
+  }
 
   const filteredFichas = fichas.filter(ficha =>
     ficha.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ficha.categoria.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Carregando fichas técnicas...</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-red-600">Erro: {error}</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>
@@ -98,40 +160,67 @@ export default function FichasTecnicasPage() {
                 Crie uma nova ficha técnica para suas receitas
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome da Receita</Label>
-                  <Input id="nome" placeholder="Ex: Bolo de Chocolate" />
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              const formData = new FormData(e.currentTarget)
+              handleCreateFicha(formData)
+            }}>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nome">Nome da Receita</Label>
+                    <Input id="nome" name="nome" placeholder="Ex: Bolo de Chocolate" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="categoria">Categoria</Label>
+                    <select
+                      id="categoria"
+                      name="categoria"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      required
+                    >
+                      <option value="">Selecione uma categoria</option>
+                      {categorias.map((categoria) => (
+                        <option key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="rendimento">Rendimento</Label>
+                    <Input id="rendimento" name="rendimento" type="number" placeholder="12" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tempoPreparo">Tempo (min)</Label>
+                    <Input id="tempoPreparo" name="tempoPreparo" type="number" placeholder="60" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="unidadeRendimento">Unidade</Label>
+                    <Input id="unidadeRendimento" name="unidadeRendimento" placeholder="porções" />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="categoria">Categoria</Label>
-                  <Input id="categoria" placeholder="Ex: Sobremesas" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="rendimento">Rendimento</Label>
-                  <Input id="rendimento" type="number" placeholder="12" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tempo">Tempo (min)</Label>
-                  <Input id="tempo" type="number" placeholder="60" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="porcoes">Porções</Label>
-                  <Input id="porcoes" type="number" placeholder="12" />
+                  <Label htmlFor="modoPreparo">Modo de Preparo</Label>
+                  <textarea
+                    id="modoPreparo"
+                    name="modoPreparo"
+                    placeholder="Descreva o modo de preparo"
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
                 </div>
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={() => setIsDialogOpen(false)}>
+                <Button type="submit">
                   Criar Ficha Técnica
                 </Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>

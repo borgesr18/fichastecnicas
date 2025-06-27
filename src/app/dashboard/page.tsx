@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -25,61 +25,93 @@ import {
 import Link from 'next/link'
 
 export default function DashboardPage() {
-  const atividadesRecentes = [
-    {
-      id: '1',
-      tipo: 'producao',
-      descricao: 'Produção de Bolo de Chocolate concluída',
-      tempo: '2 horas atrás',
-      usuario: 'admin@sistemachef.com'
-    },
-    {
-      id: '2',
-      tipo: 'estoque',
-      descricao: 'Entrada de Farinha de Trigo - 10kg',
-      tempo: '4 horas atrás',
-      usuario: 'admin@sistemachef.com'
-    },
-    {
-      id: '3',
-      tipo: 'ficha',
-      descricao: 'Nova ficha técnica: Lasanha Bolonhesa',
-      tempo: '1 dia atrás',
-      usuario: 'admin@sistemachef.com'
-    }
-  ]
+  const [metrics, setMetrics] = useState({
+    totalFichasTecnicas: 0,
+    totalInsumos: 0,
+    producaoHoje: 0,
+    custoMedio: 0
+  })
+  const [movimentacoes, setMovimentacoes] = useState<{
+    id: string
+    tipo: string
+    produto: string
+    quantidade: number
+    unidade: string
+    data: string
+    usuario: string
+  }[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const insumosBaixoEstoque = [
-    {
-      id: '1',
-      nome: 'Chocolate em Pó',
-      estoque: 3,
-      minimo: 5,
-      unidade: 'kg'
-    },
-    {
-      id: '2',
-      nome: 'Açúcar Cristal',
-      estoque: 8,
-      minimo: 10,
-      unidade: 'kg'
-    }
-  ]
+  useEffect(() => {
+    fetchMetrics()
+    fetchMovimentacoes()
+  }, [])
 
-  const fichasMaisProducidas = [
-    {
-      id: '1',
-      nome: 'Bolo de Chocolate',
-      producoes: 5,
-      ultimaProducao: '2024-06-27'
-    },
-    {
-      id: '2',
-      nome: 'Lasanha Bolonhesa',
-      producoes: 3,
-      ultimaProducao: '2024-06-26'
+  const fetchMetrics = async () => {
+    try {
+      const [fichasRes, insumosRes, producaoRes] = await Promise.all([
+        fetch('/api/fichas-tecnicas'),
+        fetch('/api/produtos'),
+        fetch('/api/producao')
+      ])
+
+      const fichas = await fichasRes.json()
+      const insumos = await insumosRes.json()
+      const producoes = await producaoRes.json()
+
+      const hoje = new Date().toISOString().split('T')[0]
+      const producaoHoje = producoes.filter((p: { createdAt?: string }) => 
+        p.createdAt?.split('T')[0] === hoje
+      ).length
+
+      const custoMedio = fichas.length > 0 
+        ? fichas.reduce((acc: number, f: { custoPorcao: number }) => acc + f.custoPorcao, 0) / fichas.length
+        : 0
+
+      setMetrics({
+        totalFichasTecnicas: fichas.length,
+        totalInsumos: insumos.length,
+        producaoHoje,
+        custoMedio
+      })
+    } catch (error) {
+      console.error('Error fetching metrics:', error)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  const fetchMovimentacoes = async () => {
+    try {
+      const response = await fetch('/api/estoque')
+      if (response.ok) {
+        const data = await response.json()
+        setMovimentacoes(data.slice(0, 3))
+      }
+    } catch (error) {
+      console.error('Error fetching movimentações:', error)
+    }
+  }
+
+  const { totalFichasTecnicas, totalInsumos, producaoHoje, custoMedio } = metrics
+
+  const atividadesRecentes = movimentacoes.map((mov, index) => ({
+    id: mov.id || index.toString(),
+    tipo: mov.tipo === 'entrada' ? 'estoque' : 'estoque',
+    descricao: `${mov.tipo === 'entrada' ? 'Entrada' : 'Saída'} de ${mov.produto} - ${mov.quantidade} ${mov.unidade}`,
+    tempo: new Date(mov.data).toLocaleDateString('pt-BR'),
+    usuario: mov.usuario
+  }))
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Carregando dashboard...</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>
@@ -109,7 +141,7 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
+            <div className="text-2xl font-bold">{totalFichasTecnicas}</div>
             <p className="text-xs text-muted-foreground">
               Total de receitas cadastradas
             </p>
@@ -124,7 +156,7 @@ export default function DashboardPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-2xl font-bold">{totalInsumos}</div>
             <p className="text-xs text-muted-foreground">
               Insumos disponíveis
             </p>
@@ -139,7 +171,7 @@ export default function DashboardPage() {
             <Factory className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
+            <div className="text-2xl font-bold">{producaoHoje}</div>
             <p className="text-xs text-muted-foreground">
               Receitas produzidas hoje
             </p>
@@ -149,14 +181,14 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Receita Total
+              Custo Médio
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 1.245,80</div>
+            <div className="text-2xl font-bold">R$ {custoMedio.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              Valor total em estoque
+              Custo médio por porção
             </p>
           </CardContent>
         </Card>
@@ -217,20 +249,20 @@ export default function DashboardPage() {
                     Estoque Baixo
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {insumosBaixoEstoque.length} itens com estoque baixo
+                    2 itens com estoque baixo
                   </p>
                 </div>
               </div>
               
               <div className="space-y-2">
-                {insumosBaixoEstoque.map((produto) => (
-                  <div key={produto.id} className="flex items-center justify-between text-sm">
-                    <span>{produto.nome}</span>
-                    <Badge variant="destructive">
-                      {produto.estoque} {produto.unidade}
-                    </Badge>
-                  </div>
-                ))}
+                <div className="flex items-center justify-between text-sm">
+                  <span>Chocolate em Pó</span>
+                  <Badge variant="destructive">3 kg</Badge>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span>Açúcar Cristal</span>
+                  <Badge variant="destructive">8 kg</Badge>
+                </div>
               </div>
               
               <div className="pt-2">
@@ -264,17 +296,20 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {fichasMaisProducidas.map((ficha) => (
-                  <TableRow key={ficha.id}>
-                    <TableCell className="font-medium">{ficha.nome}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{ficha.producoes}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(ficha.ultimaProducao).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                <TableRow>
+                  <TableCell className="font-medium">Bolo de Chocolate</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">5</Badge>
+                  </TableCell>
+                  <TableCell>27/06/2024</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Lasanha Bolonhesa</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">3</Badge>
+                  </TableCell>
+                  <TableCell>26/06/2024</TableCell>
+                </TableRow>
               </TableBody>
             </Table>
             <div className="pt-4">
