@@ -91,6 +91,7 @@ export default function IngredientesFichaTecnicaPage({ params }: { params: Promi
       fetchIngredientes()
       fetchInsumos()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedParams])
 
   const fetchFicha = async () => {

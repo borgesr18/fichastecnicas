@@ -56,7 +56,6 @@ export default function FichasTecnicasPage() {
   
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [showIngredientDialog, setShowIngredientDialog] = useState(false)
 
   useEffect(() => {
     fetchFichas()
@@ -243,7 +242,7 @@ export default function FichasTecnicasPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>Ingredientes</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setShowIngredientDialog(true)}>
+                    <Button type="button" variant="outline" size="sm" disabled>
                       <Plus className="mr-2 h-4 w-4" />
                       Adicionar Ingrediente
                     </Button>
