@@ -21,6 +21,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, email, role } = body
     
+    const defaultUserId = 'cmcf4w2yj0003qhzr8vt0gz9l'
+    try {
+      const defaultUserExists = await prisma.user.findUnique({
+        where: { id: defaultUserId }
+      })
+      
+      if (!defaultUserExists) {
+        await prisma.user.create({
+          data: {
+            id: defaultUserId,
+            email: 'admin@sistemachef.com',
+            name: 'Administrador',
+            role: 'ADMIN'
+          }
+        })
+      }
+    } catch (userError) {
+      console.warn('Default user creation/check failed:', userError)
+    }
+    
     const usuario = await prisma.user.create({
       data: {
         name,

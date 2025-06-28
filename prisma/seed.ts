@@ -6,17 +6,23 @@ async function main() {
   console.log('Seeding database...')
 
   try {
-    const defaultUser = await prisma.user.upsert({
-      where: { email: 'admin@sistemachef.com' },
-      update: {},
-      create: {
-        id: 'cmcf4w2yj0003qhzr8vt0gz9l',
-        email: 'admin@sistemachef.com',
-        name: 'Administrador',
-        role: 'ADMIN'
-      }
+    let defaultUser = await prisma.user.findUnique({
+      where: { id: 'cmcf4w2yj0003qhzr8vt0gz9l' }
     })
-    console.log('Default user created/updated:', defaultUser.email)
+    
+    if (!defaultUser) {
+      defaultUser = await prisma.user.create({
+        data: {
+          id: 'cmcf4w2yj0003qhzr8vt0gz9l',
+          email: 'admin@sistemachef.com',
+          name: 'Administrador',
+          role: 'ADMIN'
+        }
+      })
+      console.log('Default user created:', defaultUser.email)
+    } else {
+      console.log('Default user already exists:', defaultUser.email)
+    }
 
   const categorias = await Promise.all([
     prisma.categoriaInsumo.upsert({
