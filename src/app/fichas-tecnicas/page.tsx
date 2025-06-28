@@ -80,8 +80,11 @@ export default function FichasTecnicasPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [ingredientesSelecionados, setIngredientesSelecionados] = useState<IngredienteSelecionado[]>([])
+  const [editIngredientesSelecionados, setEditIngredientesSelecionados] = useState<IngredienteSelecionado[]>([])
   const [insumoSelecionado, setInsumoSelecionado] = useState('')
+  const [editInsumoSelecionado, setEditInsumoSelecionado] = useState('')
   const [quantidadeIngrediente, setQuantidadeIngrediente] = useState('')
+  const [editQuantidadeIngrediente, setEditQuantidadeIngrediente] = useState('')
   const [rendimento, setRendimento] = useState<number>(1)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -165,6 +168,34 @@ export default function FichasTecnicasPage() {
     setIngredientesSelecionados(ingredientesSelecionados.filter((_, i) => i !== index))
   }
 
+  const adicionarIngredienteEdit = () => {
+    if (!editInsumoSelecionado || !editQuantidadeIngrediente) return
+    
+    const insumo = insumos.find(i => i.id === editInsumoSelecionado)
+    if (!insumo) return
+    
+    const quantidade = parseFloat(editQuantidadeIngrediente)
+    const custoTotal = quantidade * insumo.custoUnitario
+    
+    const novoIngrediente: IngredienteSelecionado = {
+      insumoId: insumo.id,
+      nome: insumo.nome,
+      quantidade: editQuantidadeIngrediente,
+      unidadeMedidaId: insumo.unidadeMedida.id,
+      unidadeMedida: insumo.unidadeMedida.simbolo,
+      custoUnitario: insumo.custoUnitario,
+      custoTotal: custoTotal
+    }
+    
+    setEditIngredientesSelecionados([...editIngredientesSelecionados, novoIngrediente])
+    setEditInsumoSelecionado('')
+    setEditQuantidadeIngrediente('')
+  }
+
+  const removerIngredienteEdit = (index: number) => {
+    setEditIngredientesSelecionados(editIngredientesSelecionados.filter((_, i) => i !== index))
+  }
+
   const calcularCustoTotal = () => {
     return ingredientesSelecionados.reduce((total, ingrediente) => total + ingrediente.custoTotal, 0)
   }
@@ -174,12 +205,29 @@ export default function FichasTecnicasPage() {
     return rendimento > 0 ? custoTotal / rendimento : 0
   }
 
+  const calcularCustoTotalEdit = () => {
+    return editIngredientesSelecionados.reduce((total, ingrediente) => total + ingrediente.custoTotal, 0)
+  }
+
+  const calcularCustoPorcaoEdit = (rendimento: number) => {
+    const custoTotal = calcularCustoTotalEdit()
+    return rendimento > 0 ? custoTotal / rendimento : 0
+  }
+
   const resetForm = () => {
     setIngredientesSelecionados([])
     setInsumoSelecionado('')
     setQuantidadeIngrediente('')
     setRendimento(1)
     setIsDialogOpen(false)
+  }
+
+  const resetEditForm = () => {
+    setEditIngredientesSelecionados([])
+    setEditInsumoSelecionado('')
+    setEditQuantidadeIngrediente('')
+    setIsEditDialogOpen(false)
+    setSelectedFicha(null)
   }
 
   const handleCreateFicha = async (formData: FormData) => {
@@ -218,7 +266,6 @@ export default function FichasTecnicasPage() {
 
   const handleEditFicha = async (ficha: FichaTecnica) => {
     try {
-      // Fetch full ficha data including ingredients
       const response = await fetch(`/api/fichas-tecnicas/${ficha.id}`)
       if (!response.ok) throw new Error('Failed to fetch ficha details')
       
@@ -227,12 +274,26 @@ export default function FichasTecnicasPage() {
       setSelectedFicha(ficha)
       setEditFormData({
         nome: fullFicha.nome,
-        categoriaReceitaId: fullFicha.categoriaReceita.id,
+        categoriaReceitaId: fullFicha.categoriaReceita?.id || ficha.categoria,
         rendimentoTotal: fullFicha.rendimentoTotal,
-        unidadeRendimento: fullFicha.unidadeRendimento || '',
+        unidadeRendimento: fullFicha.unidadeRendimento || 'porções',
         modoPreparo: fullFicha.modoPreparo || '',
-        tempoPreparoMin: fullFicha.tempoPreparoMin || 0
+        tempoPreparoMin: fullFicha.tempoPreparoMin || ficha.tempoPreparo
       })
+      
+      const existingIngredients = fullFicha.ingredientes?.map((ing: any) => ({
+        insumoId: ing.insumo.id,
+        nome: ing.insumo.nome,
+        quantidade: ing.quantidade.toString(),
+        unidadeMedidaId: ing.unidadeMedida?.id || ing.insumo.unidadeMedida?.id,
+        unidadeMedida: ing.unidadeMedida?.simbolo || ing.insumo.unidadeMedida?.simbolo,
+        custoUnitario: Number(ing.insumo?.custoUnitario) || 0,
+        custoTotal: (Number(ing.quantidade) || 0) * (Number(ing.insumo?.custoUnitario) || 0) * (Number(ing.fatorConversao) || 1)
+      })) || []
+      
+      setEditIngredientesSelecionados(existingIngredients)
+      setEditInsumoSelecionado('')
+      setEditQuantidadeIngrediente('')
       setIsEditDialogOpen(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load ficha for editing')
@@ -247,14 +308,16 @@ export default function FichasTecnicasPage() {
       const response = await fetch(`/api/fichas-tecnicas/${selectedFicha.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editFormData)
+        body: JSON.stringify({
+          ...editFormData,
+          ingredientes: editIngredientesSelecionados
+        })
       })
       
       if (!response.ok) throw new Error('Failed to update ficha técnica')
       
       await fetchFichas()
-      setIsEditDialogOpen(false)
-      setSelectedFicha(null)
+      resetEditForm()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update ficha técnica')
     }
@@ -581,89 +644,188 @@ export default function FichasTecnicasPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Ficha Técnica</DialogTitle>
             <DialogDescription>
               Atualize as informações da ficha técnica
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-nome">Nome da Receita</Label>
-                  <Input 
-                    id="edit-nome" 
-                    value={editFormData.nome}
-                    onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
-                    placeholder="Ex: Bolo de Chocolate" 
-                    required 
-                  />
+          <form onSubmit={handleEditSubmit} className="flex flex-col max-h-full">
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid gap-6 py-4">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Informações Básicas</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-nome">Nome da Receita</Label>
+                      <Input 
+                        id="edit-nome" 
+                        value={editFormData.nome}
+                        onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
+                        placeholder="Ex: Bolo de Chocolate" 
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-categoria">Categoria</Label>
+                      <select
+                        id="edit-categoria"
+                        value={editFormData.categoriaReceitaId}
+                        onChange={(e) => setEditFormData({ ...editFormData, categoriaReceitaId: e.target.value })}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        required
+                      >
+                        <option value="">Selecione uma categoria</option>
+                        {categorias.map((categoria) => (
+                          <option key={categoria.id} value={categoria.id}>
+                            {categoria.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-rendimento">Rendimento</Label>
+                      <Input 
+                        id="edit-rendimento" 
+                        type="number" 
+                        value={editFormData.rendimentoTotal}
+                        onChange={(e) => setEditFormData({ ...editFormData, rendimentoTotal: parseFloat(e.target.value) || 1 })}
+                        placeholder="12" 
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-tempoPreparo">Tempo (min)</Label>
+                      <Input 
+                        id="edit-tempoPreparo" 
+                        type="number" 
+                        value={editFormData.tempoPreparoMin}
+                        onChange={(e) => setEditFormData({ ...editFormData, tempoPreparoMin: parseInt(e.target.value) || 0 })}
+                        placeholder="60" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-unidadeRendimento">Unidade</Label>
+                      <Input 
+                        id="edit-unidadeRendimento" 
+                        value={editFormData.unidadeRendimento}
+                        onChange={(e) => setEditFormData({ ...editFormData, unidadeRendimento: e.target.value })}
+                        placeholder="porções" 
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-categoria">Categoria</Label>
-                  <select
-                    id="edit-categoria"
-                    value={editFormData.categoriaReceitaId}
-                    onChange={(e) => setEditFormData({ ...editFormData, categoriaReceitaId: e.target.value })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    required
-                  >
-                    <option value="">Selecione uma categoria</option>
-                    {categorias.map((categoria) => (
-                      <option key={categoria.id} value={categoria.id}>
-                        {categoria.nome}
-                      </option>
-                    ))}
-                  </select>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Modo de Preparo</h3>
+                  <div className="space-y-2">
+                    <textarea
+                      id="edit-modoPreparo"
+                      value={editFormData.modoPreparo}
+                      onChange={(e) => setEditFormData({ ...editFormData, modoPreparo: e.target.value })}
+                      placeholder="Descreva o modo de preparo"
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-rendimento">Rendimento</Label>
-                  <Input 
-                    id="edit-rendimento" 
-                    type="number" 
-                    value={editFormData.rendimentoTotal}
-                    onChange={(e) => setEditFormData({ ...editFormData, rendimentoTotal: parseFloat(e.target.value) || 1 })}
-                    placeholder="12" 
-                    required 
-                  />
+                
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Ingredientes</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-insumo">Insumo</Label>
+                      <select
+                        id="edit-insumo"
+                        value={editInsumoSelecionado}
+                        onChange={(e) => setEditInsumoSelecionado(e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Selecione um insumo</option>
+                        {insumos.map((insumo) => (
+                          <option key={insumo.id} value={insumo.id}>
+                            {insumo.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-quantidade">Quantidade</Label>
+                      <Input
+                        id="edit-quantidade"
+                        type="number"
+                        step="0.001"
+                        placeholder="0.000"
+                        value={editQuantidadeIngrediente}
+                        onChange={(e) => setEditQuantidadeIngrediente(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>&nbsp;</Label>
+                      <Button type="button" onClick={adicionarIngredienteEdit} className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {editIngredientesSelecionados.length > 0 && (
+                    <div className="border rounded-md max-h-60 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Ingrediente</TableHead>
+                            <TableHead>Quantidade</TableHead>
+                            <TableHead>Unidade</TableHead>
+                            <TableHead className="w-[50px]"></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {editIngredientesSelecionados.map((ingrediente, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{ingrediente.nome}</TableCell>
+                              <TableCell>{ingrediente.quantidade}</TableCell>
+                              <TableCell>{ingrediente.unidadeMedida}</TableCell>
+                              <TableCell>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removerIngredienteEdit(index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+
+                  {editIngredientesSelecionados.length > 0 && (
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-md">
+                      <div className="space-y-2">
+                        <Label>Custo Total</Label>
+                        <div className="text-2xl font-bold text-green-600">
+                          R$ {calcularCustoTotalEdit().toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Custo por Porção</Label>
+                        <div className="text-2xl font-bold text-blue-600">
+                          R$ {calcularCustoPorcaoEdit(editFormData.rendimentoTotal).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-tempoPreparo">Tempo (min)</Label>
-                  <Input 
-                    id="edit-tempoPreparo" 
-                    type="number" 
-                    value={editFormData.tempoPreparoMin}
-                    onChange={(e) => setEditFormData({ ...editFormData, tempoPreparoMin: parseInt(e.target.value) || 0 })}
-                    placeholder="60" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-unidadeRendimento">Unidade</Label>
-                  <Input 
-                    id="edit-unidadeRendimento" 
-                    value={editFormData.unidadeRendimento}
-                    onChange={(e) => setEditFormData({ ...editFormData, unidadeRendimento: e.target.value })}
-                    placeholder="porções" 
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-modoPreparo">Modo de Preparo</Label>
-                <textarea
-                  id="edit-modoPreparo"
-                  value={editFormData.modoPreparo}
-                  onChange={(e) => setEditFormData({ ...editFormData, modoPreparo: e.target.value })}
-                  placeholder="Descreva o modo de preparo"
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                />
               </div>
             </div>
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <div className="flex justify-end space-x-2 pt-4 border-t bg-background">
+              <Button type="button" variant="outline" onClick={resetEditForm}>
                 Cancelar
               </Button>
               <Button type="submit">
