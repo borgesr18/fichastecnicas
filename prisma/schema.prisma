@@ -27,6 +27,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relacionamentos
+  insumos        Insumo[]
   fichasTecnicas FichaTecnica[]
   producoes      Producao[]
   movimentacoes  MovimentacaoEstoque[]
@@ -90,12 +91,14 @@ model Insumo {
   estoqueMinimo     Decimal? @db.Decimal(10, 3)
   categoriaInsumoId String
   unidadeMedidaId   String
+  userId            String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   // Relacionamentos
   categoriaInsumo      CategoriaInsumo           @relation(fields: [categoriaInsumoId], references: [id])
   unidadeMedida        UnidadeMedida             @relation(fields: [unidadeMedidaId], references: [id])
+  user                 User                      @relation(fields: [userId], references: [id])
   ingredientesFicha    IngredienteFichaTecnica[]
   movimentacoesEstoque MovimentacaoEstoque[]
 

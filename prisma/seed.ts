@@ -5,16 +5,18 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
-  const defaultUser = await prisma.user.upsert({
-    where: { email: 'admin@sistemachef.com' },
-    update: {},
-    create: {
-      id: 'cmcf4w2yj0003qhzr8vt0gz9l',
-      email: 'admin@sistemachef.com',
-      name: 'Administrador',
-      role: 'ADMIN'
-    }
-  })
+  try {
+    const defaultUser = await prisma.user.upsert({
+      where: { email: 'admin@sistemachef.com' },
+      update: {},
+      create: {
+        id: 'cmcf4w2yj0003qhzr8vt0gz9l',
+        email: 'admin@sistemachef.com',
+        name: 'Administrador',
+        role: 'ADMIN'
+      }
+    })
+    console.log('Default user created/updated:', defaultUser.email)
 
   const categorias = await Promise.all([
     prisma.categoriaInsumo.upsert({
@@ -104,7 +106,8 @@ async function main() {
         unidadeMedidaId: unidades[0].id,
         custoUnitario: 4.50,
         estoqueAtual: 25,
-        estoqueMinimo: 5
+        estoqueMinimo: 5,
+        userId: defaultUser.id
       }
     }))
   } else {
@@ -119,7 +122,8 @@ async function main() {
         unidadeMedidaId: unidades[0].id,
         custoUnitario: 3.20,
         estoqueAtual: 15,
-        estoqueMinimo: 10
+        estoqueMinimo: 10,
+        userId: defaultUser.id
       }
     }))
   } else {
@@ -134,18 +138,23 @@ async function main() {
         unidadeMedidaId: unidades[0].id,
         custoUnitario: 12.80,
         estoqueAtual: 3,
-        estoqueMinimo: 5
+        estoqueMinimo: 5,
+        userId: defaultUser.id
       }
     }))
   } else {
     produtos.push(existingChocolate)
   }
 
-  console.log('Database seeded successfully!')
-  console.log(`Created default user: ${defaultUser.email}`)
-  console.log(`Created ${categorias.length} categories`)
-  console.log(`Created ${unidades.length} units`)
-  console.log(`Created ${produtos.length} products`)
+    console.log('Database seeded successfully!')
+    console.log(`Created default user: ${defaultUser.email}`)
+    console.log(`Created ${categorias.length} categories`)
+    console.log(`Created ${unidades.length} units`)
+    console.log(`Created ${produtos.length} products`)
+  } catch (error) {
+    console.error('Error during seeding:', error)
+    throw error
+  }
 }
 
 main()

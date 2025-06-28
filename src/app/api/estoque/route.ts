@@ -47,7 +47,28 @@ export async function POST(request: NextRequest) {
     } = body
     
     const defaultUserId = 'cmcf4w2yj0003qhzr8vt0gz9l'
-    const finalUserId = userId || defaultUserId
+    let finalUserId = userId || defaultUserId
+    
+    try {
+      const userExists = await prisma.user.findUnique({
+        where: { id: finalUserId }
+      })
+      
+      if (!userExists) {
+        const defaultUser = await prisma.user.create({
+          data: {
+            id: defaultUserId,
+            email: 'admin@sistemachef.com',
+            name: 'Administrador',
+            role: 'ADMIN'
+          }
+        })
+        finalUserId = defaultUser.id
+      }
+    } catch (userError) {
+      console.warn('User creation/check failed, using default:', userError)
+      finalUserId = defaultUserId
+    }
     
     const movimentacao = await prisma.movimentacaoEstoque.create({
       data: {
@@ -79,7 +100,7 @@ export async function POST(request: NextRequest) {
       await prisma.insumo.update({
         where: { id: insumoId },
         data: {
-          estoqueAtual: Math.max(0, newQuantity) // Prevent negative stock
+          estoqueAtual: Math.max(0, newQuantity)
         }
       })
     }
