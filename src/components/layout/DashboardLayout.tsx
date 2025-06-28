@@ -25,14 +25,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <Sidebar />
-      <div className="flex flex-col">
-        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+      <div className="flex flex-col h-screen">
+        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 sticky top-0 z-10">
           <div className="w-full flex-1">
             <h1 className="text-lg font-semibold md:text-2xl">SistemaChef</h1>
           </div>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-          {children}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <div className="flex flex-col gap-4 lg:gap-6">
+            {children}
+          </div>
         </main>
       </div>
     </div>

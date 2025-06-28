@@ -46,9 +46,14 @@ export function Sidebar() {
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <ChefHat className="h-6 w-6" />
-          <span>SistemaChef</span>
+        <Link href="/dashboard" className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 font-semibold">
+            <ChefHat className="h-6 w-6" />
+            <span>SistemaChef</span>
+          </div>
+          <span className="text-xs text-muted-foreground leading-tight">
+            Seu sistema de controle de fichas técnicas
+          </span>
         </Link>
       </div>
       <div className="flex-1">
@@ -86,7 +91,7 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden border-r bg-muted/40 md:block">
+      <div className="hidden border-r bg-muted/40 md:block fixed h-screen w-[220px] lg:w-[280px] z-20">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <SidebarContent />
         </div>
