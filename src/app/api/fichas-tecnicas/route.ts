@@ -10,46 +10,75 @@ export async function GET() {
         ingredientes: {
           include: {
             insumo: true,
-            unidadeMedida: true
-          }
+            unidadeMedida: true,
+          },
         },
         _count: {
           select: {
-            ingredientes: true
-          }
-        }
+            ingredientes: true,
+          },
+        },
       },
       orderBy: {
-        nome: 'asc'
+        nome: 'asc',
+      },
+    })
+
+    const fichasFormatted = fichasTecnicas.map((ficha) => {
+      // Cálculo seguro do custoTotal
+      const custoTotal = ficha.ingredientes.reduce((total, ing) => {
+        const quantidade = Number(ing.quantidade) || 0
+        const custoUnitario = Number(ing.insumo?.custoUnitario) || 0
+        const fatorConversao = Number(ing.fatorConversao) || 1 // Usar 1 como padrão se não houver conversão
+
+        // Adiciona ao total apenas se a linha for válida
+        return total + quantidade * custoUnitario * fatorConversao
+      }, 0)
+
+      const rendimento = Number(ficha.rendimentoTotal) || 0
+      
+      // Cálculo seguro do custoPorcao, evitando divisão por zero
+      const custoPorcao = rendimento > 0 ? custoTotal / rendimento : 0
+
+      return {
+        id: ficha.id,
+        nome: ficha.nome,
+        categoria: ficha.categoriaReceita.nome,
+        rendimento: rendimento,
+        custoTotal: custoTotal, // Agora é um número seguro
+        custoPorcao: custoPorcao, // Agora é um número seguro
+        tempoPreparo: ficha.tempoPreparoMin || 0,
+        ingredientes: ficha._count.ingredientes,
+        // Incluir todos os dados necessários para a edição
+        modoPreparo: ficha.modoPreparo,
+        unidadeRendimento: ficha.unidadeRendimento,
+        categoriaReceitaId: ficha.categoriaReceitaId,
+        listaIngredientes: ficha.ingredientes.map(ing => ({
+          insumoId: ing.insumoId,
+          nome: ing.insumo.nome,
+          quantidade: ing.quantidade,
+          unidadeMedidaId: ing.unidadeMedidaId,
+          unidadeMedida: ing.unidadeMedida.simbolo,
+          custoUnitario: Number(ing.insumo?.custoUnitario) || 0,
+          custoTotal: (Number(ing.quantidade) || 0) * (Number(ing.insumo?.custoUnitario) || 0) * (Number(ing.fatorConversao) || 1)
+        }))
       }
     })
-    
-    const fichasFormatted = fichasTecnicas.map(ficha => ({
-      id: ficha.id,
-      nome: ficha.nome,
-      categoria: ficha.categoriaReceita.nome,
-      rendimento: ficha.rendimentoTotal,
-      custoTotal: ficha.ingredientes.reduce((total, ing) => {
-        return total + (Number(ing.quantidade) * Number(ing.insumo.custoUnitario) * Number(ing.fatorConversao))
-      }, 0),
-      custoPorcao: 0, // Will be calculated
-      tempoPreparo: ficha.tempoPreparoMin || 0,
-      ingredientes: ficha._count.ingredientes
-    }))
-    
-    fichasFormatted.forEach(ficha => {
-      ficha.custoPorcao = ficha.custoTotal / Number(ficha.rendimento)
-    })
-    
+
     return NextResponse.json(fichasFormatted)
   } catch (error) {
     console.error('Error fetching fichas técnicas:', error)
-    return NextResponse.json({ error: 'Failed to fetch fichas técnicas' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch fichas técnicas' },
+      { status: 500 },
+    )
   }
 }
 
+// A função POST permanece exatamente como está. Não precisa alterá-la.
 export async function POST(request: NextRequest) {
-  try {
+    // ... seu código do POST existente ...
+    try {
     const body = await request.json()
     const { 
       nome, 
