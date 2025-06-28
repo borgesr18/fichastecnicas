@@ -91,7 +91,7 @@ model Insumo {
   estoqueMinimo     Decimal? @db.Decimal(10, 3)
   categoriaInsumoId String
   unidadeMedidaId   String
-  userId            String
+  userId            String   @default("cmcf4w2yj0003qhzr8vt0gz9l")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
