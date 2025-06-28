@@ -70,6 +70,24 @@ interface IngredienteSelecionado {
   custoTotal: number
 }
 
+interface IngredienteAPI {
+  quantidade: number
+  fatorConversao?: number
+  insumo: {
+    id: string
+    nome: string
+    custoUnitario?: number
+    unidadeMedida?: {
+      id: string
+      simbolo: string
+    }
+  }
+  unidadeMedida?: {
+    id: string
+    simbolo: string
+  }
+}
+
 export default function FichasTecnicasPage() {
   const [fichas, setFichas] = useState<FichaTecnica[]>([])
   const [categorias, setCategorias] = useState<CategoriaReceita[]>([])
@@ -281,7 +299,7 @@ export default function FichasTecnicasPage() {
         tempoPreparoMin: fullFicha.tempoPreparoMin || ficha.tempoPreparo
       })
       
-      const existingIngredients = fullFicha.ingredientes?.map((ing: any) => ({
+      const existingIngredients = fullFicha.ingredientes?.map((ing: IngredienteAPI) => ({
         insumoId: ing.insumo.id,
         nome: ing.insumo.nome,
         quantidade: ing.quantidade.toString(),
