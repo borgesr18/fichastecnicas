@@ -46,6 +46,9 @@ export async function POST(request: NextRequest) {
       valorUnitario 
     } = body
     
+    const defaultUserId = 'cmcf4w2yj0003qhzr8vt0gz9l'
+    const finalUserId = userId || defaultUserId
+    
     const movimentacao = await prisma.movimentacaoEstoque.create({
       data: {
         tipo: tipo.toUpperCase(),
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
         observacao,
         insumoId,
         unidadeMedidaId,
-        userId
+        userId: finalUserId
       },
       include: {
         insumo: true,

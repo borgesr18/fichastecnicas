@@ -5,6 +5,17 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
+  const defaultUser = await prisma.user.upsert({
+    where: { email: 'admin@sistemachef.com' },
+    update: {},
+    create: {
+      id: 'cmcf4w2yj0003qhzr8vt0gz9l',
+      email: 'admin@sistemachef.com',
+      name: 'Administrador',
+      role: 'ADMIN'
+    }
+  })
+
   const categorias = await Promise.all([
     prisma.categoriaInsumo.upsert({
       where: { nome: 'Farinhas' },
@@ -131,6 +142,7 @@ async function main() {
   }
 
   console.log('Database seeded successfully!')
+  console.log(`Created default user: ${defaultUser.email}`)
   console.log(`Created ${categorias.length} categories`)
   console.log(`Created ${unidades.length} units`)
   console.log(`Created ${produtos.length} products`)

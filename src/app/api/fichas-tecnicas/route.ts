@@ -61,6 +61,9 @@ export async function POST(request: NextRequest) {
       userId 
     } = body
     
+    const defaultUserId = 'cmcf4w2yj0003qhzr8vt0gz9l'
+    const finalUserId = userId || defaultUserId
+    
     const fichaTecnica = await prisma.fichaTecnica.create({
       data: {
         nome,
@@ -69,7 +72,7 @@ export async function POST(request: NextRequest) {
         unidadeRendimento: unidadeRendimento || 'porções',
         modoPreparo,
         tempoPreparoMin: parseInt(tempoPreparoMin) || null,
-        userId
+        userId: finalUserId
       },
       include: {
         categoriaReceita: true,
