@@ -317,7 +317,7 @@ export default function FichasTecnicasPage() {
               Nova Ficha Técnica
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Nova Ficha Técnica</DialogTitle>
               <DialogDescription>
@@ -328,8 +328,8 @@ export default function FichasTecnicasPage() {
               e.preventDefault()
               const formData = new FormData(e.currentTarget)
               handleCreateFicha(formData)
-            }}>
-              <div className="grid gap-4 py-4">
+            }} className="flex flex-col flex-1 min-h-0">
+              <div className="grid gap-4 py-4 overflow-y-auto flex-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="nome">Nome da Receita</Label>
@@ -476,7 +476,7 @@ export default function FichasTecnicasPage() {
                   )}
                 </div>
               </div>
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end space-x-2 pt-4 border-t bg-background">
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Cancelar
                 </Button>
@@ -569,15 +569,15 @@ export default function FichasTecnicasPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Editar Ficha Técnica</DialogTitle>
             <DialogDescription>
               Atualize as informações da ficha técnica
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit}>
-            <div className="grid gap-4 py-4">
+          <form onSubmit={handleEditSubmit} className="flex flex-col flex-1 min-h-0">
+            <div className="grid gap-4 py-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-nome">Nome da Receita</Label>
@@ -650,7 +650,7 @@ export default function FichasTecnicasPage() {
                 />
               </div>
             </div>
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-2 pt-4 border-t bg-background">
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancelar
               </Button>
@@ -664,7 +664,7 @@ export default function FichasTecnicasPage() {
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Visualizar Ficha Técnica</DialogTitle>
             <DialogDescription>
@@ -672,7 +672,7 @@ export default function FichasTecnicasPage() {
             </DialogDescription>
           </DialogHeader>
           {selectedFicha && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Nome</Label>
@@ -707,13 +707,13 @@ export default function FichasTecnicasPage() {
                   <p className="text-2xl font-bold text-blue-600">R$ {selectedFicha.custoPorcao.toFixed(2)}</p>
                 </div>
               </div>
-              <div className="flex justify-end">
-                <Button onClick={() => setIsViewDialogOpen(false)}>
-                  Fechar
-                </Button>
-              </div>
             </div>
           )}
+          <div className="flex justify-end pt-4 border-t bg-background">
+            <Button onClick={() => setIsViewDialogOpen(false)}>
+              Fechar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
