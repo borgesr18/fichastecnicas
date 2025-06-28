@@ -91,7 +91,7 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden border-r bg-muted/40 md:block fixed h-screen w-[220px] lg:w-[280px] z-20">
+      <div className="hidden border-r bg-background md:block fixed h-screen w-[220px] lg:w-[280px] z-20">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <SidebarContent />
         </div>
