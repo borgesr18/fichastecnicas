@@ -69,6 +69,8 @@ export default function ProdutosPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null)
   const [formData, setFormData] = useState({
     nome: '',
     marca: '',
@@ -154,7 +156,8 @@ export default function ProdutosPage() {
   }
 
   const handleViewProduto = (produto: Produto) => {
-    alert(`Visualizando: ${produto.nome}\nCategoria: ${produto.categoriaInsumo.nome}\nEstoque: ${produto.estoqueAtual} ${produto.unidadeMedida.simbolo}`)
+    setSelectedProduto(produto)
+    setIsViewDialogOpen(true)
   }
 
   const handleEditProduto = (produto: Produto) => {
@@ -391,6 +394,66 @@ export default function ProdutosPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Visualizar Insumo</DialogTitle>
+            <DialogDescription>
+              Detalhes completos do insumo
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProduto && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Nome</Label>
+                  <p className="text-lg font-semibold">{selectedProduto.nome}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Categoria</Label>
+                  <p className="text-lg"><Badge variant="secondary">{selectedProduto.categoriaInsumo.nome}</Badge></p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Unidade de Medida</Label>
+                  <p className="text-lg font-semibold">{selectedProduto.unidadeMedida.nome} ({selectedProduto.unidadeMedida.simbolo})</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Custo Unitário</Label>
+                  <p className="text-lg font-semibold text-green-600">R$ {selectedProduto.custoUnitario.toFixed(2)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Estoque Mínimo</Label>
+                  <p className="text-lg font-semibold">{selectedProduto.estoqueMinimo} {selectedProduto.unidadeMedida.simbolo}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-md">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Estoque Atual</Label>
+                  <p className="text-2xl font-bold text-blue-600">{selectedProduto.estoqueAtual} {selectedProduto.unidadeMedida.simbolo}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                  <p className="text-lg">
+                    <Badge variant={selectedProduto.estoqueAtual <= selectedProduto.estoqueMinimo ? 'destructive' : 'default'}>
+                      {selectedProduto.estoqueAtual <= selectedProduto.estoqueMinimo ? 'Estoque Baixo' : 'Normal'}
+                    </Badge>
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={() => setIsViewDialogOpen(false)}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
     </DashboardLayout>
   )
 }
