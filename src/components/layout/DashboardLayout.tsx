@@ -8,12 +8,12 @@ interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
+// Para ajustar o tamanho do dashboard em relação ao Sidebar,
+// altere os valores abaixo nas classes Tailwind `md:ml-[220px]` e `lg:ml-[280px]`.
+// Eles devem ser iguais à largura do Sidebar definida no componente Sidebar.tsx.
+
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { loading } = useAuth()
-
-  // Defina as larguras do sidebar conforme usadas no Sidebar
-  const sidebarWidth = 220
-  const sidebarWidthLg = 280
 
   if (loading) {
     return (
@@ -30,14 +30,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="w-full min-h-screen">
       <Sidebar />
       <div
-        className={`
+        className="
           flex flex-col min-h-screen min-w-0 transition-all
-          md:ml-[${sidebarWidth}px] lg:ml-[${sidebarWidthLg}px]
-        `}
-        // Fallback para SSR/hidratação se preferir estilo inline:
-        style={{
-          marginLeft: 0,
-        }}
+          md:ml-[220px] lg:ml-[280px]  // <-- AJUSTE AQUI para bater com a largura do sidebar
+        "
       >
         <header className="flex h-14 items-center gap-4 border-b bg-muted px-4 lg:h-[60px] lg:px-6 sticky top-0 z-10">
           <div className="w-full flex-1">
