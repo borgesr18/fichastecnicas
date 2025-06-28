@@ -241,6 +241,14 @@ export default function FichasTecnicasPage() {
   }
 
   const resetEditForm = () => {
+    setEditFormData({
+      nome: '',
+      categoriaReceitaId: '',
+      rendimentoTotal: 1,
+      unidadeRendimento: '',
+      modoPreparo: '',
+      tempoPreparoMin: 0
+    })
     setEditIngredientesSelecionados([])
     setEditInsumoSelecionado('')
     setEditQuantidadeIngrediente('')
@@ -292,21 +300,21 @@ export default function FichasTecnicasPage() {
       setSelectedFicha(ficha)
       setEditFormData({
         nome: fullFicha.nome,
-        categoriaReceitaId: fullFicha.categoriaReceita?.id || ficha.categoria,
+        categoriaReceitaId: fullFicha.categorias_receitas?.id || ficha.categoria,
         rendimentoTotal: fullFicha.rendimentoTotal,
         unidadeRendimento: fullFicha.unidadeRendimento || 'porções',
         modoPreparo: fullFicha.modoPreparo || '',
         tempoPreparoMin: fullFicha.tempoPreparoMin || ficha.tempoPreparo
       })
       
-      const existingIngredients = fullFicha.ingredientes?.map((ing: IngredienteAPI) => ({
-        insumoId: ing.insumo.id,
-        nome: ing.insumo.nome,
+      const existingIngredients = fullFicha.ingredientes_ficha_tecnica?.map((ing: any) => ({
+        insumoId: ing.insumos?.id,
+        nome: ing.insumos?.nome,
         quantidade: ing.quantidade.toString(),
-        unidadeMedidaId: ing.unidadeMedida?.id || ing.insumo.unidadeMedida?.id,
-        unidadeMedida: ing.unidadeMedida?.simbolo || ing.insumo.unidadeMedida?.simbolo,
-        custoUnitario: Number(ing.insumo?.custoUnitario) || 0,
-        custoTotal: (Number(ing.quantidade) || 0) * (Number(ing.insumo?.custoUnitario) || 0) * (Number(ing.fatorConversao) || 1)
+        unidadeMedidaId: ing.unidades_medida?.id,
+        unidadeMedida: ing.unidades_medida?.simbolo,
+        custoUnitario: Number(ing.insumos?.custoUnitario) || 0,
+        custoTotal: (Number(ing.quantidade) || 0) * (Number(ing.insumos?.custoUnitario) || 0) * (Number(ing.fatorConversao) || 1)
       })) || []
       
       setEditIngredientesSelecionados(existingIngredients)
