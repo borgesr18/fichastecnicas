@@ -70,6 +70,7 @@ export default function ProdutosPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null)
   const [formData, setFormData] = useState({
     nome: '',
@@ -139,6 +140,35 @@ export default function ProdutosPage() {
     }
   }
 
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedProduto) return
+
+    try {
+      const response = await fetch(`/api/produtos/${selectedProduto.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (!response.ok) throw new Error('Failed to update produto')
+
+      await fetchData()
+      setIsEditDialogOpen(false)
+      setSelectedProduto(null)
+      setFormData({
+        nome: '',
+        marca: '',
+        categoriaId: '',
+        unidadeId: '',
+        custoUnitario: '',
+        estoqueMinimo: ''
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update produto')
+    }
+  }
+
   const handleDeleteProduto = async (produtoId: string) => {
     if (!confirm('Tem certeza que deseja excluir este insumo?')) return
     
@@ -161,7 +191,16 @@ export default function ProdutosPage() {
   }
 
   const handleEditProduto = (produto: Produto) => {
-    alert(`Edição de ${produto.nome} será implementada em breve`)
+    setSelectedProduto(produto)
+    setFormData({
+      nome: produto.nome,
+      marca: produto.marca || '',
+      categoriaId: produto.categoriaInsumo.id,
+      unidadeId: produto.unidadeMedida.id,
+      custoUnitario: produto.custoUnitario.toString(),
+      estoqueMinimo: produto.estoqueMinimo.toString()
+    })
+    setIsEditDialogOpen(true)
   }
 
   const filteredProdutos = produtos.filter(produto =>
@@ -394,6 +433,108 @@ export default function ProdutosPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Insumo</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do insumo
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nome">Nome do Insumo</Label>
+                  <Input
+                    id="edit-nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    placeholder="Ex: Farinha de Trigo"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-marca">Marca (opcional)</Label>
+                  <Input
+                    id="edit-marca"
+                    value={formData.marca}
+                    onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+                    placeholder="Ex: Dona Benta"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-categoria">Categoria</Label>
+                  <Select value={formData.categoriaId} onValueChange={(value) => setFormData({ ...formData, categoriaId: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categorias.map((categoria) => (
+                        <SelectItem key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-unidade">Unidade de Medida</Label>
+                  <Select value={formData.unidadeId} onValueChange={(value) => setFormData({ ...formData, unidadeId: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma unidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {unidades.map((unidade) => (
+                        <SelectItem key={unidade.id} value={unidade.id}>
+                          {unidade.nome} ({unidade.simbolo})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-custo">Custo Unitário (R$)</Label>
+                  <Input
+                    id="edit-custo"
+                    type="number"
+                    step="0.01"
+                    value={formData.custoUnitario}
+                    onChange={(e) => setFormData({ ...formData, custoUnitario: e.target.value })}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-estoque">Estoque Mínimo</Label>
+                  <Input
+                    id="edit-estoque"
+                    type="number"
+                    value={formData.estoqueMinimo}
+                    onChange={(e) => setFormData({ ...formData, estoqueMinimo: e.target.value })}
+                    placeholder="10"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Atualizar Insumo
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>

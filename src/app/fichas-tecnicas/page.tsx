@@ -84,7 +84,16 @@ export default function FichasTecnicasPage() {
   const [quantidadeIngrediente, setQuantidadeIngrediente] = useState('')
   const [rendimento, setRendimento] = useState<number>(1)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedFicha, setSelectedFicha] = useState<FichaTecnica | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    nome: '',
+    categoriaReceitaId: '',
+    rendimentoTotal: 1,
+    unidadeRendimento: '',
+    modoPreparo: '',
+    tempoPreparoMin: 0
+  })
 
   useEffect(() => {
     fetchFichas()
@@ -207,8 +216,48 @@ export default function FichasTecnicasPage() {
     alert(`Imprimindo ficha técnica: ${ficha.nome}\nFuncionalidade de impressão será implementada em breve`)
   }
 
-  const handleEditFicha = (ficha: FichaTecnica) => {
-    alert(`Edição de ${ficha.nome} será implementada em breve`)
+  const handleEditFicha = async (ficha: FichaTecnica) => {
+    try {
+      // Fetch full ficha data including ingredients
+      const response = await fetch(`/api/fichas-tecnicas/${ficha.id}`)
+      if (!response.ok) throw new Error('Failed to fetch ficha details')
+      
+      const fullFicha = await response.json()
+      
+      setSelectedFicha(ficha)
+      setEditFormData({
+        nome: fullFicha.nome,
+        categoriaReceitaId: fullFicha.categoriaReceita.id,
+        rendimentoTotal: fullFicha.rendimentoTotal,
+        unidadeRendimento: fullFicha.unidadeRendimento || '',
+        modoPreparo: fullFicha.modoPreparo || '',
+        tempoPreparoMin: fullFicha.tempoPreparoMin || 0
+      })
+      setIsEditDialogOpen(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load ficha for editing')
+    }
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedFicha) return
+
+    try {
+      const response = await fetch(`/api/fichas-tecnicas/${selectedFicha.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editFormData)
+      })
+      
+      if (!response.ok) throw new Error('Failed to update ficha técnica')
+      
+      await fetchFichas()
+      setIsEditDialogOpen(false)
+      setSelectedFicha(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update ficha técnica')
+    }
   }
 
   const handleDeleteFicha = async (fichaId: string) => {
@@ -517,6 +566,101 @@ export default function FichasTecnicasPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Ficha Técnica</DialogTitle>
+            <DialogDescription>
+              Atualize as informações da ficha técnica
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nome">Nome da Receita</Label>
+                  <Input 
+                    id="edit-nome" 
+                    value={editFormData.nome}
+                    onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
+                    placeholder="Ex: Bolo de Chocolate" 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-categoria">Categoria</Label>
+                  <select
+                    id="edit-categoria"
+                    value={editFormData.categoriaReceitaId}
+                    onChange={(e) => setEditFormData({ ...editFormData, categoriaReceitaId: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    required
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {categorias.map((categoria) => (
+                      <option key={categoria.id} value={categoria.id}>
+                        {categoria.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-rendimento">Rendimento</Label>
+                  <Input 
+                    id="edit-rendimento" 
+                    type="number" 
+                    value={editFormData.rendimentoTotal}
+                    onChange={(e) => setEditFormData({ ...editFormData, rendimentoTotal: parseFloat(e.target.value) || 1 })}
+                    placeholder="12" 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tempoPreparo">Tempo (min)</Label>
+                  <Input 
+                    id="edit-tempoPreparo" 
+                    type="number" 
+                    value={editFormData.tempoPreparoMin}
+                    onChange={(e) => setEditFormData({ ...editFormData, tempoPreparoMin: parseInt(e.target.value) || 0 })}
+                    placeholder="60" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-unidadeRendimento">Unidade</Label>
+                  <Input 
+                    id="edit-unidadeRendimento" 
+                    value={editFormData.unidadeRendimento}
+                    onChange={(e) => setEditFormData({ ...editFormData, unidadeRendimento: e.target.value })}
+                    placeholder="porções" 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-modoPreparo">Modo de Preparo</Label>
+                <textarea
+                  id="edit-modoPreparo"
+                  value={editFormData.modoPreparo}
+                  onChange={(e) => setEditFormData({ ...editFormData, modoPreparo: e.target.value })}
+                  placeholder="Descreva o modo de preparo"
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Atualizar Ficha Técnica
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
