@@ -29,7 +29,8 @@ import {
   Edit,
   Trash2,
   Printer,
-  FileText
+  FileText,
+  X
 } from 'lucide-react'
 
 interface FichaTecnica {
@@ -48,18 +49,41 @@ interface CategoriaReceita {
   nome: string
 }
 
+interface Insumo {
+  id: string
+  nome: string
+  unidadeMedida: {
+    id: string
+    nome: string
+    simbolo: string
+  }
+}
+
+interface IngredienteSelecionado {
+  insumoId: string
+  nome: string
+  quantidade: string
+  unidadeMedidaId: string
+  unidadeMedida: string
+}
+
 export default function FichasTecnicasPage() {
   const [fichas, setFichas] = useState<FichaTecnica[]>([])
   const [categorias, setCategorias] = useState<CategoriaReceita[]>([])
+  const [insumos, setInsumos] = useState<Insumo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [ingredientesSelecionados, setIngredientesSelecionados] = useState<IngredienteSelecionado[]>([])
+  const [insumoSelecionado, setInsumoSelecionado] = useState('')
+  const [quantidadeIngrediente, setQuantidadeIngrediente] = useState('')
 
   useEffect(() => {
     fetchFichas()
     fetchCategorias()
+    fetchInsumos()
   }, [])
 
   const fetchFichas = async () => {
@@ -87,6 +111,40 @@ export default function FichasTecnicasPage() {
     }
   }
 
+  const fetchInsumos = async () => {
+    try {
+      const response = await fetch('/api/produtos')
+      if (!response.ok) throw new Error('Failed to fetch insumos')
+      const data = await response.json()
+      setInsumos(data)
+    } catch (err) {
+      console.error('Error fetching insumos:', err)
+    }
+  }
+
+  const adicionarIngrediente = () => {
+    if (!insumoSelecionado || !quantidadeIngrediente) return
+    
+    const insumo = insumos.find(i => i.id === insumoSelecionado)
+    if (!insumo) return
+    
+    const novoIngrediente: IngredienteSelecionado = {
+      insumoId: insumo.id,
+      nome: insumo.nome,
+      quantidade: quantidadeIngrediente,
+      unidadeMedidaId: insumo.unidadeMedida.id,
+      unidadeMedida: insumo.unidadeMedida.simbolo
+    }
+    
+    setIngredientesSelecionados([...ingredientesSelecionados, novoIngrediente])
+    setInsumoSelecionado('')
+    setQuantidadeIngrediente('')
+  }
+
+  const removerIngrediente = (index: number) => {
+    setIngredientesSelecionados(ingredientesSelecionados.filter((_, i) => i !== index))
+  }
+
   const handleCreateFicha = async (formData: FormData) => {
     try {
       const response = await fetch('/api/fichas-tecnicas', {
@@ -109,6 +167,34 @@ export default function FichasTecnicasPage() {
       setIsDialogOpen(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create ficha técnica')
+    }
+  }
+
+  const handleViewFicha = (ficha: FichaTecnica) => {
+    alert(`Visualizando: ${ficha.nome}\nCategoria: ${ficha.categoria}\nRendimento: ${ficha.rendimento} porções\nCusto Total: R$ ${ficha.custoTotal.toFixed(2)}`)
+  }
+
+  const handlePrintFicha = (ficha: FichaTecnica) => {
+    alert(`Imprimindo ficha técnica: ${ficha.nome}\nFuncionalidade de impressão será implementada em breve`)
+  }
+
+  const handleEditFicha = (ficha: FichaTecnica) => {
+    alert(`Edição de ${ficha.nome} será implementada em breve`)
+  }
+
+  const handleDeleteFicha = async (fichaId: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta ficha técnica?')) return
+    
+    try {
+      const response = await fetch(`/api/fichas-tecnicas/${fichaId}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) throw new Error('Failed to delete ficha técnica')
+      
+      await fetchFichas()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete ficha técnica')
     }
   }
 
@@ -211,6 +297,80 @@ export default function FichasTecnicasPage() {
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
+                
+                <div className="space-y-4">
+                  <Label>Ingredientes</Label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="insumo">Insumo</Label>
+                      <select
+                        id="insumo"
+                        value={insumoSelecionado}
+                        onChange={(e) => setInsumoSelecionado(e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Selecione um insumo</option>
+                        {insumos.map((insumo) => (
+                          <option key={insumo.id} value={insumo.id}>
+                            {insumo.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="quantidade">Quantidade</Label>
+                      <Input
+                        id="quantidade"
+                        type="number"
+                        step="0.001"
+                        placeholder="0.000"
+                        value={quantidadeIngrediente}
+                        onChange={(e) => setQuantidadeIngrediente(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>&nbsp;</Label>
+                      <Button type="button" onClick={adicionarIngrediente} className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {ingredientesSelecionados.length > 0 && (
+                    <div className="border rounded-md">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Ingrediente</TableHead>
+                            <TableHead>Quantidade</TableHead>
+                            <TableHead>Unidade</TableHead>
+                            <TableHead className="w-[50px]"></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {ingredientesSelecionados.map((ingrediente, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{ingrediente.nome}</TableCell>
+                              <TableCell>{ingrediente.quantidade}</TableCell>
+                              <TableCell>{ingrediente.unidadeMedida}</TableCell>
+                              <TableCell>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removerIngrediente(index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -281,16 +441,16 @@ export default function FichasTecnicasPage() {
                     <TableCell>{ficha.ingredientes} itens</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handleViewFicha(ficha)}>
                           <FileText className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handlePrintFicha(ficha)}>
                           <Printer className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handleEditFicha(ficha)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" className="text-destructive">
+                        <Button variant="outline" size="sm" className="text-destructive" onClick={() => handleDeleteFicha(ficha.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

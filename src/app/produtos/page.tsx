@@ -53,6 +53,7 @@ interface Unidade {
 interface Produto {
   id: string
   nome: string
+  marca?: string
   categoriaInsumo: Categoria
   unidadeMedida: Unidade
   custoUnitario: number
@@ -70,6 +71,7 @@ export default function ProdutosPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [formData, setFormData] = useState({
     nome: '',
+    marca: '',
     categoriaId: '',
     unidadeId: '',
     custoUnitario: '',
@@ -124,6 +126,7 @@ export default function ProdutosPage() {
       setIsDialogOpen(false)
       setFormData({
         nome: '',
+        marca: '',
         categoriaId: '',
         unidadeId: '',
         custoUnitario: '',
@@ -209,6 +212,17 @@ export default function ProdutosPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="marca">Marca</Label>
+                  <Input 
+                    id="marca" 
+                    placeholder="Ex: Dona Benta"
+                    value={formData.marca}
+                    onChange={(e) => setFormData({...formData, marca: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="categoria">Categoria</Label>
                   <Select value={formData.categoriaId} onValueChange={(value) => setFormData({...formData, categoriaId: value})}>
                     <SelectTrigger>
@@ -223,8 +237,6 @@ export default function ProdutosPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="unidade">Unidade</Label>
                   <Select value={formData.unidadeId} onValueChange={(value) => setFormData({...formData, unidadeId: value})}>
@@ -240,6 +252,8 @@ export default function ProdutosPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="custo">Custo Unitário</Label>
                   <Input 
@@ -321,6 +335,7 @@ export default function ProdutosPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
+                    <TableHead>Marca</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Unidade</TableHead>
                     <TableHead>Custo Unitário</TableHead>
@@ -333,7 +348,7 @@ export default function ProdutosPage() {
                 <TableBody>
                   {filteredProdutos.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                         Nenhum insumo encontrado. Cadastre o primeiro insumo clicando em &quot;Novo Insumo&quot;.
                       </TableCell>
                     </TableRow>
@@ -341,6 +356,7 @@ export default function ProdutosPage() {
                     filteredProdutos.map((produto) => (
                       <TableRow key={produto.id}>
                         <TableCell className="font-medium">{produto.nome}</TableCell>
+                        <TableCell>{produto.marca || '-'}</TableCell>
                         <TableCell>
                           <Badge variant="secondary">{produto.categoriaInsumo.nome}</Badge>
                         </TableCell>
