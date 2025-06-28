@@ -317,7 +317,7 @@ export default function FichasTecnicasPage() {
               Nova Ficha Técnica
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nova Ficha Técnica</DialogTitle>
               <DialogDescription>
@@ -328,8 +328,152 @@ export default function FichasTecnicasPage() {
               e.preventDefault()
               const formData = new FormData(e.currentTarget)
               handleCreateFicha(formData)
-            }}>
-              <div className="grid gap-4 py-4">
+            }} className="flex flex-col max-h-full">
+              <div className="flex-1 overflow-y-auto">
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nome">Nome da Receita</Label>
+                      <Input id="nome" name="nome" placeholder="Ex: Bolo de Chocolate" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="categoria">Categoria</Label>
+                      <select
+                        id="categoria"
+                        name="categoria"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        required
+                      >
+                        <option value="">Selecione uma categoria</option>
+                        {categorias.map((categoria) => (
+                          <option key={categoria.id} value={categoria.id}>
+                            {categoria.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="rendimento">Rendimento</Label>
+                      <Input 
+                        id="rendimento" 
+                        name="rendimento" 
+                        type="number" 
+                        placeholder="12" 
+                        value={rendimento}
+                        onChange={(e) => setRendimento(parseFloat(e.target.value) || 1)}
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tempoPreparo">Tempo (min)</Label>
+                      <Input 
+                        id="tempoPreparo" 
+                        name="tempoPreparo" 
+                        type="number" 
+                        placeholder="60" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="unidadeRendimento">Unidade</Label>
+                      <Input id="unidadeRendimento" name="unidadeRendimento" placeholder="porções" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="modoPreparo">Modo de Preparo</Label>
+                    <textarea
+                      id="modoPreparo"
+                      name="modoPreparo"
+                      placeholder="Descreva o modo de preparo"
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <Label>Ingredientes</Label>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="insumo">Insumo</Label>
+                        <select
+                          id="insumo"
+                          value={insumoSelecionado}
+                          onChange={(e) => setInsumoSelecionado(e.target.value)}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Selecione um insumo</option>
+                          {insumos.map((insumo) => (
+                            <option key={insumo.id} value={insumo.id}>
+                              {insumo.nome}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="quantidade">Quantidade</Label>
+                        <Input
+                          id="quantidade"
+                          type="number"
+                          step="0.001"
+                          placeholder="0.000"
+                          value={quantidadeIngrediente}
+                          onChange={(e) => setQuantidadeIngrediente(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>&nbsp;</Label>
+                        <Button type="button" onClick={adicionarIngrediente} className="w-full">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Adicionar
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {ingredientesSelecionados.length > 0 && (
+                      <div className="border rounded-md max-h-60 overflow-y-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Ingrediente</TableHead>
+                              <TableHead>Quantidade</TableHead>
+                              <TableHead>Unidade</TableHead>
+                              <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {ingredientesSelecionados.map((ingrediente, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{ingrediente.nome}</TableCell>
+                                <TableCell>{ingrediente.quantidade}</TableCell>
+                                <TableCell>{ingrediente.unidadeMedida}</TableCell>
+                                <TableCell>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => removerIngrediente(index)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4 border-t bg-background">
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  Criar Ficha Técnica
+                </Button>
+              </div>
+            </form>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="nome">Nome da Receita</Label>
@@ -475,16 +619,6 @@ export default function FichasTecnicasPage() {
                     </div>
                   )}
                 </div>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  Criar Ficha Técnica
-                </Button>
-              </div>
-            </form>
           </DialogContent>
         </Dialog>
       </div>
