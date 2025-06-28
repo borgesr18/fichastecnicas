@@ -19,6 +19,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -328,162 +329,164 @@ export default function FichasTecnicasPage() {
               e.preventDefault()
               const formData = new FormData(e.currentTarget)
               handleCreateFicha(formData)
-            }}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome da Receita</Label>
-                    <Input id="nome" name="nome" placeholder="Ex: Bolo de Chocolate" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="categoria">Categoria</Label>
-                    <select
-                      id="categoria"
-                      name="categoria"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      required
-                    >
-                      <option value="">Selecione uma categoria</option>
-                      {categorias.map((categoria) => (
-                        <option key={categoria.id} value={categoria.id}>
-                          {categoria.nome}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="rendimento">Rendimento</Label>
-                    <Input 
-                      id="rendimento" 
-                      name="rendimento" 
-                      type="number" 
-                      placeholder="12" 
-                      value={rendimento}
-                      onChange={(e) => setRendimento(parseFloat(e.target.value) || 1)}
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tempoPreparo">Tempo (min)</Label>
-                    <Input id="tempoPreparo" name="tempoPreparo" type="number" placeholder="60" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="unidadeRendimento">Unidade</Label>
-                    <Input id="unidadeRendimento" name="unidadeRendimento" placeholder="porções" />
-                  </div>
-                </div>
-                
-                {ingredientesSelecionados.length > 0 && (
-                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-md">
+            }} className="flex flex-col flex-1 min-h-0">
+              <div className="flex-1 overflow-y-auto px-6">
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Custo Total</Label>
-                      <div className="text-2xl font-bold text-green-600">
-                        R$ {calcularCustoTotal().toFixed(2)}
-                      </div>
+                      <Label htmlFor="nome">Nome da Receita</Label>
+                      <Input id="nome" name="nome" placeholder="Ex: Bolo de Chocolate" required />
                     </div>
                     <div className="space-y-2">
-                      <Label>Custo por Porção</Label>
-                      <div className="text-2xl font-bold text-blue-600">
-                        R$ {calcularCustoPorcao(rendimento).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="modoPreparo">Modo de Preparo</Label>
-                  <textarea
-                    id="modoPreparo"
-                    name="modoPreparo"
-                    placeholder="Descreva o modo de preparo"
-                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                </div>
-                
-                <div className="space-y-4">
-                  <Label>Ingredientes</Label>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="insumo">Insumo</Label>
+                      <Label htmlFor="categoria">Categoria</Label>
                       <select
-                        id="insumo"
-                        value={insumoSelecionado}
-                        onChange={(e) => setInsumoSelecionado(e.target.value)}
+                        id="categoria"
+                        name="categoria"
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        required
                       >
-                        <option value="">Selecione um insumo</option>
-                        {insumos.map((insumo) => (
-                          <option key={insumo.id} value={insumo.id}>
-                            {insumo.nome}
+                        <option value="">Selecione uma categoria</option>
+                        {categorias.map((categoria) => (
+                          <option key={categoria.id} value={categoria.id}>
+                            {categoria.nome}
                           </option>
                         ))}
                       </select>
                     </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="quantidade">Quantidade</Label>
-                      <Input
-                        id="quantidade"
-                        type="number"
-                        step="0.001"
-                        placeholder="0.000"
-                        value={quantidadeIngrediente}
-                        onChange={(e) => setQuantidadeIngrediente(e.target.value)}
+                      <Label htmlFor="rendimento">Rendimento</Label>
+                      <Input 
+                        id="rendimento" 
+                        name="rendimento" 
+                        type="number" 
+                        placeholder="12" 
+                        value={rendimento}
+                        onChange={(e) => setRendimento(parseFloat(e.target.value) || 1)}
+                        required 
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>&nbsp;</Label>
-                      <Button type="button" onClick={adicionarIngrediente} className="w-full">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adicionar
-                      </Button>
+                      <Label htmlFor="tempoPreparo">Tempo (min)</Label>
+                      <Input id="tempoPreparo" name="tempoPreparo" type="number" placeholder="60" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="unidadeRendimento">Unidade</Label>
+                      <Input id="unidadeRendimento" name="unidadeRendimento" placeholder="porções" />
                     </div>
                   </div>
                   
                   {ingredientesSelecionados.length > 0 && (
-                    <div className="border rounded-md max-h-60 overflow-y-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Ingrediente</TableHead>
-                            <TableHead>Quantidade</TableHead>
-                            <TableHead>Unidade</TableHead>
-                            <TableHead className="w-[50px]"></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {ingredientesSelecionados.map((ingrediente, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{ingrediente.nome}</TableCell>
-                              <TableCell>{ingrediente.quantidade}</TableCell>
-                              <TableCell>{ingrediente.unidadeMedida}</TableCell>
-                              <TableCell>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => removerIngrediente(index)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-md">
+                      <div className="space-y-2">
+                        <Label>Custo Total</Label>
+                        <div className="text-2xl font-bold text-green-600">
+                          R$ {calcularCustoTotal().toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Custo por Porção</Label>
+                        <div className="text-2xl font-bold text-blue-600">
+                          R$ {calcularCustoPorcao(rendimento).toFixed(2)}
+                        </div>
+                      </div>
                     </div>
                   )}
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="modoPreparo">Modo de Preparo</Label>
+                    <textarea
+                      id="modoPreparo"
+                      name="modoPreparo"
+                      placeholder="Descreva o modo de preparo"
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <Label>Ingredientes</Label>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="insumo">Insumo</Label>
+                        <select
+                          id="insumo"
+                          value={insumoSelecionado}
+                          onChange={(e) => setInsumoSelecionado(e.target.value)}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Selecione um insumo</option>
+                          {insumos.map((insumo) => (
+                            <option key={insumo.id} value={insumo.id}>
+                              {insumo.nome}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="quantidade">Quantidade</Label>
+                        <Input
+                          id="quantidade"
+                          type="number"
+                          step="0.001"
+                          placeholder="0.000"
+                          value={quantidadeIngrediente}
+                          onChange={(e) => setQuantidadeIngrediente(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>&nbsp;</Label>
+                        <Button type="button" onClick={adicionarIngrediente} className="w-full">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Adicionar
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {ingredientesSelecionados.length > 0 && (
+                      <div className="border rounded-md max-h-60 overflow-y-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Ingrediente</TableHead>
+                              <TableHead>Quantidade</TableHead>
+                              <TableHead>Unidade</TableHead>
+                              <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {ingredientesSelecionados.map((ingrediente, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{ingrediente.nome}</TableCell>
+                                <TableCell>{ingrediente.quantidade}</TableCell>
+                                <TableCell>{ingrediente.unidadeMedida}</TableCell>
+                                <TableCell>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => removerIngrediente(index)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="flex justify-end space-x-2">
+              <DialogFooter>
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Cancelar
                 </Button>
                 <Button type="submit">
                   Criar Ficha Técnica
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
@@ -576,88 +579,90 @@ export default function FichasTecnicasPage() {
               Atualize as informações da ficha técnica
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleEditSubmit} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto px-6">
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-nome">Nome da Receita</Label>
+                    <Input 
+                      id="edit-nome" 
+                      value={editFormData.nome}
+                      onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
+                      placeholder="Ex: Bolo de Chocolate" 
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-categoria">Categoria</Label>
+                    <select
+                      id="edit-categoria"
+                      value={editFormData.categoriaReceitaId}
+                      onChange={(e) => setEditFormData({ ...editFormData, categoriaReceitaId: e.target.value })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      required
+                    >
+                      <option value="">Selecione uma categoria</option>
+                      {categorias.map((categoria) => (
+                        <option key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-rendimento">Rendimento</Label>
+                    <Input 
+                      id="edit-rendimento" 
+                      type="number" 
+                      value={editFormData.rendimentoTotal}
+                      onChange={(e) => setEditFormData({ ...editFormData, rendimentoTotal: parseFloat(e.target.value) || 1 })}
+                      placeholder="12" 
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-tempoPreparo">Tempo (min)</Label>
+                    <Input 
+                      id="edit-tempoPreparo" 
+                      type="number" 
+                      value={editFormData.tempoPreparoMin}
+                      onChange={(e) => setEditFormData({ ...editFormData, tempoPreparoMin: parseInt(e.target.value) || 0 })}
+                      placeholder="60" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-unidadeRendimento">Unidade</Label>
+                    <Input 
+                      id="edit-unidadeRendimento" 
+                      value={editFormData.unidadeRendimento}
+                      onChange={(e) => setEditFormData({ ...editFormData, unidadeRendimento: e.target.value })}
+                      placeholder="porções" 
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-nome">Nome da Receita</Label>
-                  <Input 
-                    id="edit-nome" 
-                    value={editFormData.nome}
-                    onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
-                    placeholder="Ex: Bolo de Chocolate" 
-                    required 
+                  <Label htmlFor="edit-modoPreparo">Modo de Preparo</Label>
+                  <textarea
+                    id="edit-modoPreparo"
+                    value={editFormData.modoPreparo}
+                    onChange={(e) => setEditFormData({ ...editFormData, modoPreparo: e.target.value })}
+                    placeholder="Descreva o modo de preparo"
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-categoria">Categoria</Label>
-                  <select
-                    id="edit-categoria"
-                    value={editFormData.categoriaReceitaId}
-                    onChange={(e) => setEditFormData({ ...editFormData, categoriaReceitaId: e.target.value })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    required
-                  >
-                    <option value="">Selecione uma categoria</option>
-                    {categorias.map((categoria) => (
-                      <option key={categoria.id} value={categoria.id}>
-                        {categoria.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-rendimento">Rendimento</Label>
-                  <Input 
-                    id="edit-rendimento" 
-                    type="number" 
-                    value={editFormData.rendimentoTotal}
-                    onChange={(e) => setEditFormData({ ...editFormData, rendimentoTotal: parseFloat(e.target.value) || 1 })}
-                    placeholder="12" 
-                    required 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-tempoPreparo">Tempo (min)</Label>
-                  <Input 
-                    id="edit-tempoPreparo" 
-                    type="number" 
-                    value={editFormData.tempoPreparoMin}
-                    onChange={(e) => setEditFormData({ ...editFormData, tempoPreparoMin: parseInt(e.target.value) || 0 })}
-                    placeholder="60" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-unidadeRendimento">Unidade</Label>
-                  <Input 
-                    id="edit-unidadeRendimento" 
-                    value={editFormData.unidadeRendimento}
-                    onChange={(e) => setEditFormData({ ...editFormData, unidadeRendimento: e.target.value })}
-                    placeholder="porções" 
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-modoPreparo">Modo de Preparo</Label>
-                <textarea
-                  id="edit-modoPreparo"
-                  value={editFormData.modoPreparo}
-                  onChange={(e) => setEditFormData({ ...editFormData, modoPreparo: e.target.value })}
-                  placeholder="Descreva o modo de preparo"
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                />
               </div>
             </div>
-            <div className="flex justify-end space-x-2">
+            <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancelar
               </Button>
               <Button type="submit">
                 Atualizar Ficha Técnica
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -672,47 +677,51 @@ export default function FichasTecnicasPage() {
             </DialogDescription>
           </DialogHeader>
           {selectedFicha && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Nome</Label>
-                  <p className="text-lg font-semibold">{selectedFicha.nome}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Categoria</Label>
-                  <p className="text-lg"><Badge variant="secondary">{selectedFicha.categoria}</Badge></p>
+            <>
+              <div className="flex-1 overflow-y-auto px-6">
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Nome</Label>
+                      <p className="text-lg font-semibold">{selectedFicha.nome}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Categoria</Label>
+                      <p className="text-lg"><Badge variant="secondary">{selectedFicha.categoria}</Badge></p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Rendimento</Label>
+                      <p className="text-lg font-semibold">{selectedFicha.rendimento} porções</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Tempo de Preparo</Label>
+                      <p className="text-lg font-semibold">{selectedFicha.tempoPreparo} min</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Ingredientes</Label>
+                      <p className="text-lg font-semibold">{selectedFicha.ingredientes} itens</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-md">
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Custo Total</Label>
+                      <p className="text-2xl font-bold text-green-600">R$ {selectedFicha.custoTotal.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Custo por Porção</Label>
+                      <p className="text-2xl font-bold text-blue-600">R$ {selectedFicha.custoPorcao.toFixed(2)}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Rendimento</Label>
-                  <p className="text-lg font-semibold">{selectedFicha.rendimento} porções</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Tempo de Preparo</Label>
-                  <p className="text-lg font-semibold">{selectedFicha.tempoPreparo} min</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Ingredientes</Label>
-                  <p className="text-lg font-semibold">{selectedFicha.ingredientes} itens</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-md">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Custo Total</Label>
-                  <p className="text-2xl font-bold text-green-600">R$ {selectedFicha.custoTotal.toFixed(2)}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Custo por Porção</Label>
-                  <p className="text-2xl font-bold text-blue-600">R$ {selectedFicha.custoPorcao.toFixed(2)}</p>
-                </div>
-              </div>
-              <div className="flex justify-end">
+              <DialogFooter>
                 <Button onClick={() => setIsViewDialogOpen(false)}>
                   Fechar
                 </Button>
-              </div>
-            </div>
+              </DialogFooter>
+            </>
           )}
         </DialogContent>
       </Dialog>
