@@ -134,6 +134,30 @@ export default function ProdutosPage() {
     }
   }
 
+  const handleDeleteProduto = async (produtoId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este insumo?')) return
+    
+    try {
+      const response = await fetch(`/api/produtos/${produtoId}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) throw new Error('Failed to delete produto')
+      
+      await fetchData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete produto')
+    }
+  }
+
+  const handleViewProduto = (produto: Produto) => {
+    alert(`Visualizando: ${produto.nome}\nCategoria: ${produto.categoriaInsumo.nome}\nEstoque: ${produto.estoqueAtual} ${produto.unidadeMedida.simbolo}`)
+  }
+
+  const handleEditProduto = (produto: Produto) => {
+    alert(`Edição de ${produto.nome} será implementada em breve`)
+  }
+
   const filteredProdutos = produtos.filter(produto =>
     produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     produto.categoriaInsumo.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -331,13 +355,13 @@ export default function ProdutosPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => handleViewProduto(produto)}>
                               <Package className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => handleEditProduto(produto)}>
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" size="sm" className="text-destructive">
+                            <Button variant="outline" size="sm" className="text-destructive" onClick={() => handleDeleteProduto(produto.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
