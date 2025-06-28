@@ -28,7 +28,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex flex-col flex-1 min-w-0">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 sticky top-0 z-10">
           <div className="w-full flex-1">
-            <h1 className="text-lg font-semibold md:text-2xl">SistemaChef</h1>
+            <h1 className="text-lg font-semibold md:text-2xl">SistemaChef - Seu sistema de fichas técnicas.</h1>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-3 lg:p-4 w-full">
