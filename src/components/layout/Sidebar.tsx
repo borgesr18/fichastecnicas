@@ -51,9 +51,6 @@ export function Sidebar() {
             <ChefHat className="h-6 w-6" />
             <span>SistemaChef</span>
           </div>
-          <span className="text-xs text-muted-foreground leading-tight">
-            Seu sistema de controle de fichas técnicas
-          </span>
         </Link>
       </div>
       <div className="flex-1">
@@ -91,7 +88,8 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden border-r bg-muted/40 md:block fixed h-screen w-[220px] lg:w-[280px] z-20">
+      <div className="hidden md:block fixed h-screen w-[220px] lg:w-[280px] z-20 border-r bg-muted">
+        {/* Removido /40 do bg-muted para fundo opaco */}
         <div className="flex h-full max-h-screen flex-col gap-2">
           <SidebarContent />
         </div>
