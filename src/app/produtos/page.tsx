@@ -69,6 +69,9 @@ export default function ProdutosPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null)
   const [formData, setFormData] = useState({
     nome: '',
     marca: '',
@@ -137,6 +140,35 @@ export default function ProdutosPage() {
     }
   }
 
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedProduto) return
+
+    try {
+      const response = await fetch(`/api/produtos/${selectedProduto.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (!response.ok) throw new Error('Failed to update produto')
+
+      await fetchData()
+      setIsEditDialogOpen(false)
+      setSelectedProduto(null)
+      setFormData({
+        nome: '',
+        marca: '',
+        categoriaId: '',
+        unidadeId: '',
+        custoUnitario: '',
+        estoqueMinimo: ''
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update produto')
+    }
+  }
+
   const handleDeleteProduto = async (produtoId: string) => {
     if (!confirm('Tem certeza que deseja excluir este insumo?')) return
     
@@ -154,11 +186,21 @@ export default function ProdutosPage() {
   }
 
   const handleViewProduto = (produto: Produto) => {
-    alert(`Visualizando: ${produto.nome}\nCategoria: ${produto.categoriaInsumo.nome}\nEstoque: ${produto.estoqueAtual} ${produto.unidadeMedida.simbolo}`)
+    setSelectedProduto(produto)
+    setIsViewDialogOpen(true)
   }
 
   const handleEditProduto = (produto: Produto) => {
-    alert(`Edição de ${produto.nome} será implementada em breve`)
+    setSelectedProduto(produto)
+    setFormData({
+      nome: produto.nome,
+      marca: produto.marca || '',
+      categoriaId: produto.categoriaInsumo.id,
+      unidadeId: produto.unidadeMedida.id,
+      custoUnitario: produto.custoUnitario.toString(),
+      estoqueMinimo: produto.estoqueMinimo.toString()
+    })
+    setIsEditDialogOpen(true)
   }
 
   const filteredProdutos = produtos.filter(produto =>
@@ -391,6 +433,168 @@ export default function ProdutosPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Insumo</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do insumo
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nome">Nome do Insumo</Label>
+                  <Input
+                    id="edit-nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    placeholder="Ex: Farinha de Trigo"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-marca">Marca (opcional)</Label>
+                  <Input
+                    id="edit-marca"
+                    value={formData.marca}
+                    onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+                    placeholder="Ex: Dona Benta"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-categoria">Categoria</Label>
+                  <Select value={formData.categoriaId} onValueChange={(value) => setFormData({ ...formData, categoriaId: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categorias.map((categoria) => (
+                        <SelectItem key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-unidade">Unidade de Medida</Label>
+                  <Select value={formData.unidadeId} onValueChange={(value) => setFormData({ ...formData, unidadeId: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma unidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {unidades.map((unidade) => (
+                        <SelectItem key={unidade.id} value={unidade.id}>
+                          {unidade.nome} ({unidade.simbolo})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-custo">Custo Unitário (R$)</Label>
+                  <Input
+                    id="edit-custo"
+                    type="number"
+                    step="0.01"
+                    value={formData.custoUnitario}
+                    onChange={(e) => setFormData({ ...formData, custoUnitario: e.target.value })}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-estoque">Estoque Mínimo</Label>
+                  <Input
+                    id="edit-estoque"
+                    type="number"
+                    value={formData.estoqueMinimo}
+                    onChange={(e) => setFormData({ ...formData, estoqueMinimo: e.target.value })}
+                    placeholder="10"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Atualizar Insumo
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Visualizar Insumo</DialogTitle>
+            <DialogDescription>
+              Detalhes completos do insumo
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProduto && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Nome</Label>
+                  <p className="text-lg font-semibold">{selectedProduto.nome}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Categoria</Label>
+                  <p className="text-lg"><Badge variant="secondary">{selectedProduto.categoriaInsumo.nome}</Badge></p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Unidade de Medida</Label>
+                  <p className="text-lg font-semibold">{selectedProduto.unidadeMedida.nome} ({selectedProduto.unidadeMedida.simbolo})</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Custo Unitário</Label>
+                  <p className="text-lg font-semibold text-green-600">R$ {selectedProduto.custoUnitario.toFixed(2)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Estoque Mínimo</Label>
+                  <p className="text-lg font-semibold">{selectedProduto.estoqueMinimo} {selectedProduto.unidadeMedida.simbolo}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-md">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Estoque Atual</Label>
+                  <p className="text-2xl font-bold text-blue-600">{selectedProduto.estoqueAtual} {selectedProduto.unidadeMedida.simbolo}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                  <p className="text-lg">
+                    <Badge variant={selectedProduto.estoqueAtual <= selectedProduto.estoqueMinimo ? 'destructive' : 'default'}>
+                      {selectedProduto.estoqueAtual <= selectedProduto.estoqueMinimo ? 'Estoque Baixo' : 'Normal'}
+                    </Badge>
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={() => setIsViewDialogOpen(false)}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
     </DashboardLayout>
   )
 }
