@@ -7,13 +7,14 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { nome, categoriaId, unidadeId, custoUnitario, estoqueMinimo } = body
+    const { nome, marca, categoriaId, unidadeId, custoUnitario, estoqueMinimo } = body
     
     const resolvedParams = await params
     const produto = await prisma.insumo.update({
       where: { id: resolvedParams.id },
       data: {
         nome,
+        marca: marca || null,
         categoriaInsumoId: categoriaId,
         unidadeMedidaId: unidadeId,
         custoUnitario: parseFloat(custoUnitario),

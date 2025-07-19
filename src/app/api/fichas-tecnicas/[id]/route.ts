@@ -38,16 +38,18 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { 
-      nome, 
-      categoriaReceitaId, 
-      rendimentoTotal, 
+    const {
+      nome,
+      categoriaReceitaId,
+      rendimentoTotal,
       unidadeRendimento,
       modoPreparo,
-      tempoPreparoMin 
+      tempoPreparoMin,
+      ingredientes,
     } = body
-    
+
     const resolvedParams = await params
+
     const fichaTecnica = await prisma.fichaTecnica.update({
       where: { id: resolvedParams.id },
       data: {
@@ -56,18 +58,30 @@ export async function PUT(
         rendimentoTotal: parseFloat(rendimentoTotal),
         unidadeRendimento,
         modoPreparo,
-        tempoPreparoMin: parseInt(tempoPreparoMin) || null
+        tempoPreparoMin: parseInt(tempoPreparoMin) || null,
+        ingredientes: {
+          deleteMany: {},
+          create: ingredientes.map((ing: any) => ({
+            insumoId: ing.insumoId,
+            quantidade: parseFloat(ing.quantidade),
+            unidadeMedidaId: ing.unidadeMedidaId,
+          })),
+        },
       },
       include: {
         categoriaReceita: true,
-        user: true
-      }
+        user: true,
+        ingredientes: true,
+      },
     })
-    
+
     return NextResponse.json(fichaTecnica)
   } catch (error) {
     console.error('Error updating ficha técnica:', error)
-    return NextResponse.json({ error: 'Failed to update ficha técnica' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to update ficha técnica' },
+      { status: 500 },
+    )
   }
 }
 
