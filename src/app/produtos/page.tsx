@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -72,6 +73,7 @@ export default function ProdutosPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null)
+  const { user } = useAuth()
   const [formData, setFormData] = useState({
     nome: '',
     marca: '',
@@ -116,11 +118,15 @@ export default function ProdutosPage() {
 
   const handleCreateProduto = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user) {
+      setError("Você precisa estar logado para criar um insumo.")
+      return
+    }
     try {
       const response = await fetch('/api/produtos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, userId: user.id })
       })
       
       if (!response.ok) throw new Error('Failed to create produto')
