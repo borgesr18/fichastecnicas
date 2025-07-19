@@ -75,37 +75,36 @@ export async function GET() {
   }
 }
 
-// A função POST permanece exatamente como está. Não precisa alterá-la.
 export async function POST(request: NextRequest) {
-    // ... seu código do POST existente ...
-    try {
+  try {
     const body = await request.json()
-    const { 
-      nome, 
-      categoriaReceitaId, 
-      rendimentoTotal, 
+    const {
+      nome,
+      categoriaReceitaId,
+      rendimentoTotal,
       unidadeRendimento,
       modoPreparo,
       tempoPreparoMin,
-      userId 
+      userId,
+      ingredientes,
     } = body
-    
+
     const defaultUserId = 'cmcf4w2yj0003qhzr8vt0gz9l'
     let finalUserId = userId || defaultUserId
-    
+
     try {
       const userExists = await prisma.user.findUnique({
-        where: { id: finalUserId }
+        where: { id: finalUserId },
       })
-      
+
       if (!userExists) {
         const defaultUser = await prisma.user.create({
           data: {
             id: defaultUserId,
             email: 'admin@sistemachef.com',
             name: 'Administrador',
-            role: 'ADMIN'
-          }
+            role: 'ADMIN',
+          },
         })
         finalUserId = defaultUser.id
       }
@@ -113,7 +112,7 @@ export async function POST(request: NextRequest) {
       console.warn('User creation/check failed, using default:', userError)
       finalUserId = defaultUserId
     }
-    
+
     const fichaTecnica = await prisma.fichaTecnica.create({
       data: {
         nome,
@@ -122,17 +121,28 @@ export async function POST(request: NextRequest) {
         unidadeRendimento: unidadeRendimento || 'porções',
         modoPreparo,
         tempoPreparoMin: parseInt(tempoPreparoMin) || null,
-        userId: finalUserId
+        userId: finalUserId,
+        ingredientes: {
+          create: ingredientes.map((ing: any) => ({
+            insumoId: ing.insumoId,
+            quantidade: parseFloat(ing.quantidade),
+            unidadeMedidaId: ing.unidadeMedidaId,
+          })),
+        },
       },
       include: {
         categoriaReceita: true,
-        user: true
-      }
+        user: true,
+        ingredientes: true,
+      },
     })
-    
+
     return NextResponse.json(fichaTecnica, { status: 201 })
   } catch (error) {
     console.error('Error creating ficha técnica:', error)
-    return NextResponse.json({ error: 'Failed to create ficha técnica' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to create ficha técnica' },
+      { status: 500 },
+    )
   }
 }

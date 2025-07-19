@@ -226,137 +226,141 @@ export default function ConfiguracoesPage() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen && dialogType === 'categoria'} onOpenChange={(isOpen) => { if (!isOpen) setIsDialogOpen(false) }}>
             <DialogTrigger asChild>
-              <Button onClick={() => setDialogType('categoria')}>
+              <Button onClick={() => { setDialogType('categoria'); setIsDialogOpen(true) }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Categoria
               </Button>
             </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nova Categoria de Receita</DialogTitle>
+                <DialogDescription>Cadastre uma nova categoria para suas receitas</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateCategoria(new FormData(e.currentTarget)) }}>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nome-cat">Nome da Categoria</Label>
+                    <Input id="nome-cat" name="nome" placeholder="Ex: Sobremesas" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="desc-cat">Descrição</Label>
+                    <Input id="desc-cat" name="descricao" placeholder="Descrição da categoria" />
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                    <Button type="submit">Cadastrar</Button>
+                  </div>
+                </div>
+              </form>
+            </DialogContent>
           </Dialog>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen && dialogType === 'categoria-insumo'} onOpenChange={(isOpen) => { if (!isOpen) setIsDialogOpen(false) }}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => setDialogType('categoria-insumo')}>
+              <Button variant="outline" onClick={() => { setDialogType('categoria-insumo'); setIsDialogOpen(true) }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Categoria Insumo
               </Button>
             </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nova Categoria de Insumo</DialogTitle>
+                <DialogDescription>Cadastre uma nova categoria para seus insumos</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateCategoriaInsumo(new FormData(e.currentTarget)) }}>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nome-cat-insumo">Nome da Categoria</Label>
+                      <Input id="nome-cat-insumo" name="nome" placeholder="Ex: Farinhas" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="desc-cat-insumo">Descrição</Label>
+                      <Input id="desc-cat-insumo" name="descricao" placeholder="Descrição da categoria de insumo" />
+                    </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                    <Button type="submit">Cadastrar</Button>
+                  </div>
+                </div>
+              </form>
+            </DialogContent>
           </Dialog>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen && dialogType === 'unidade'} onOpenChange={(isOpen) => { if (!isOpen) setIsDialogOpen(false) }}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => setDialogType('unidade')}>
+              <Button variant="outline" onClick={() => { setDialogType('unidade'); setIsDialogOpen(true) }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Unidade
               </Button>
             </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nova Unidade de Medida</DialogTitle>
+                <DialogDescription>Cadastre uma nova unidade de medida</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateUnidade(new FormData(e.currentTarget)) }}>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="nome-un">Nome</Label>
+                        <Input id="nome-un" name="nome" placeholder="Ex: Quilograma" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="simbolo-un">Símbolo</Label>
+                        <Input id="simbolo-un" name="simbolo" placeholder="Ex: kg" required />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tipo-un">Tipo</Label>
+                      <Input id="tipo-un" name="tipo" placeholder="Ex: Peso, Volume, Quantidade" required />
+                    </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                    <Button type="submit">Cadastrar</Button>
+                  </div>
+                </div>
+              </form>
+            </DialogContent>
           </Dialog>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen && dialogType === 'usuario'} onOpenChange={(isOpen) => { if (!isOpen) setIsDialogOpen(false) }}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => setDialogType('usuario')}>
+              <Button variant="outline" onClick={() => { setDialogType('usuario'); setIsDialogOpen(true) }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Usuário
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>
-                  {dialogType === 'categoria' && 'Nova Categoria de Receita'}
-                  {dialogType === 'categoria-insumo' && 'Nova Categoria de Insumo'}
-                  {dialogType === 'unidade' && 'Nova Unidade de Medida'}
-                  {dialogType === 'usuario' && 'Novo Usuário'}
-                </DialogTitle>
-                <DialogDescription>
-                  Cadastre um novo item no sistema
-                </DialogDescription>
+                <DialogTitle>Novo Usuário</DialogTitle>
+                <DialogDescription>Cadastre um novo usuário no sistema</DialogDescription>
               </DialogHeader>
-              <form onSubmit={(e) => {
-                e.preventDefault()
-                const formData = new FormData(e.currentTarget)
-                if (dialogType === 'categoria') handleCreateCategoria(formData)
-                else if (dialogType === 'categoria-insumo') handleCreateCategoriaInsumo(formData)
-                else if (dialogType === 'unidade') handleCreateUnidade(formData)
-                else if (dialogType === 'usuario') handleCreateUsuario(formData)
-              }}>
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateUsuario(new FormData(e.currentTarget)) }}>
                 <div className="grid gap-4 py-4">
-                  {dialogType === 'categoria' && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="nome-cat">Nome da Categoria</Label>
-                        <Input id="nome-cat" name="nome" placeholder="Ex: Sobremesas" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="desc-cat">Descrição</Label>
-                        <Input id="desc-cat" name="descricao" placeholder="Descrição da categoria" />
-                      </div>
-                    </>
-                  )}
-
-                  {dialogType === 'categoria-insumo' && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="nome-cat-insumo">Nome da Categoria</Label>
-                        <Input id="nome-cat-insumo" name="nome" placeholder="Ex: Farinhas" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="desc-cat-insumo">Descrição</Label>
-                        <Input id="desc-cat-insumo" name="descricao" placeholder="Descrição da categoria de insumo" />
-                      </div>
-                    </>
-                  )}
-                  
-                  {dialogType === 'unidade' && (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="nome-un">Nome</Label>
-                          <Input id="nome-un" name="nome" placeholder="Ex: Quilograma" required />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="simbolo-un">Símbolo</Label>
-                          <Input id="simbolo-un" name="simbolo" placeholder="Ex: kg" required />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="tipo-un">Tipo</Label>
-                        <Input id="tipo-un" name="tipo" placeholder="Ex: Peso, Volume, Quantidade" required />
-                      </div>
-                    </>
-                  )}
-                  
-                  {dialogType === 'usuario' && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="nome-user">Nome</Label>
-                        <Input id="nome-user" name="nome" placeholder="Nome completo" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email-user">Email</Label>
-                        <Input id="email-user" name="email" type="email" placeholder="email@exemplo.com" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="role-user">Função</Label>
-                        <select
-                          id="role-user"
-                          name="role"
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          required
-                        >
-                          <option value="">Selecione uma função</option>
-                          <option value="ADMIN">Administrador</option>
-                          <option value="EDITOR">Editor</option>
-                          <option value="VISUALIZADOR">Visualizador</option>
-                        </select>
-                      </div>
-                    </>
-                  )}
-                  
+                    <div className="space-y-2">
+                      <Label htmlFor="nome-user">Nome</Label>
+                      <Input id="nome-user" name="nome" placeholder="Nome completo" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email-user">Email</Label>
+                      <Input id="email-user" name="email" type="email" placeholder="email@exemplo.com" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="role-user">Função</Label>
+                      <select
+                        id="role-user"
+                        name="role"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        required
+                      >
+                        <option value="">Selecione uma função</option>
+                        <option value="ADMIN">Administrador</option>
+                        <option value="EDITOR">Editor</option>
+                        <option value="VISUALIZADOR">Visualizador</option>
+                      </select>
+                    </div>
                   <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button type="submit">
-                      Cadastrar
-                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                    <Button type="submit">Cadastrar</Button>
                   </div>
                 </div>
               </form>

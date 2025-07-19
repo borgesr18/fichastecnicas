@@ -194,7 +194,12 @@ export default function FichasTecnicasPage() {
           unidadeRendimento: formData.get('unidadeRendimento'),
           modoPreparo: formData.get('modoPreparo'),
           tempoPreparoMin: formData.get('tempoPreparo'),
-          userId: 'default-user-id'
+          userId: 'default-user-id',
+          ingredientes: ingredientesSelecionados.map(ing => ({
+            insumoId: ing.insumoId,
+            quantidade: ing.quantidade,
+            unidadeMedidaId: ing.unidadeMedidaId
+          }))
         })
       })
       
@@ -233,6 +238,7 @@ export default function FichasTecnicasPage() {
         modoPreparo: fullFicha.modoPreparo || '',
         tempoPreparoMin: fullFicha.tempoPreparoMin || 0
       })
+      setIngredientesSelecionados(fullFicha.listaIngredientes || [])
       setIsEditDialogOpen(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load ficha for editing')
@@ -247,7 +253,14 @@ export default function FichasTecnicasPage() {
       const response = await fetch(`/api/fichas-tecnicas/${selectedFicha.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editFormData)
+        body: JSON.stringify({
+          ...editFormData,
+          ingredientes: ingredientesSelecionados.map(ing => ({
+            insumoId: ing.insumoId,
+            quantidade: ing.quantidade,
+            unidadeMedidaId: ing.unidadeMedidaId
+          }))
+        })
       })
       
       if (!response.ok) throw new Error('Failed to update ficha técnica')
@@ -782,6 +795,80 @@ export default function FichasTecnicasPage() {
                   placeholder="Descreva o modo de preparo"
                   className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
+              </div>
+
+              <div className="space-y-4">
+                <Label>Ingredientes</Label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-insumo">Insumo</Label>
+                    <select
+                      id="edit-insumo"
+                      value={insumoSelecionado}
+                      onChange={(e) => setInsumoSelecionado(e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Selecione um insumo</option>
+                      {insumos.map((insumo) => (
+                        <option key={insumo.id} value={insumo.id}>
+                          {insumo.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-quantidade">Quantidade</Label>
+                    <Input
+                      id="edit-quantidade"
+                      type="number"
+                      step="0.001"
+                      placeholder="0.000"
+                      value={quantidadeIngrediente}
+                      onChange={(e) => setQuantidadeIngrediente(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>&nbsp;</Label>
+                    <Button type="button" onClick={adicionarIngrediente} className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </div>
+
+                {ingredientesSelecionados.length > 0 && (
+                  <div className="border rounded-md max-h-60 overflow-y-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Ingrediente</TableHead>
+                          <TableHead>Quantidade</TableHead>
+                          <TableHead>Unidade</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {ingredientesSelecionados.map((ingrediente, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{ingrediente.nome}</TableCell>
+                            <TableCell>{ingrediente.quantidade}</TableCell>
+                            <TableCell>{ingrediente.unidadeMedida}</TableCell>
+                            <TableCell>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removerIngrediente(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex justify-end space-x-2">

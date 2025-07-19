@@ -120,7 +120,10 @@ export default function ProdutosPage() {
       const response = await fetch('/api/produtos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          marca: formData.marca || null
+        })
       })
       
       if (!response.ok) throw new Error('Failed to create produto')
@@ -148,7 +151,10 @@ export default function ProdutosPage() {
       const response = await fetch(`/api/produtos/${selectedProduto.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          marca: formData.marca || null
+        })
       })
 
       if (!response.ok) throw new Error('Failed to update produto')
