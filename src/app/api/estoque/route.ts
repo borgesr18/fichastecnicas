@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { TipoMovimentacao } from '@prisma/client'
 
 export async function GET() {
   try {
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
     
     const movimentacao = await prisma.movimentacaoEstoque.create({
       data: {
-        tipo: tipo.toUpperCase(),
+        tipo: tipo as TipoMovimentacao,
         quantidade: parseFloat(quantidade),
         valorUnitario: valorUnitario ? parseFloat(valorUnitario) : null,
         valorTotal: valorUnitario ? parseFloat(quantidade) * parseFloat(valorUnitario) : null,
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
     })
     
     if (currentInsumo) {
-      const newQuantity = tipo.toUpperCase() === 'ENTRADA' 
+      const newQuantity = tipo === 'ENTRADA'
         ? Number(currentInsumo.estoqueAtual) + parseFloat(quantidade)
         : Number(currentInsumo.estoqueAtual) - parseFloat(quantidade)
       

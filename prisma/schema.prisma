@@ -17,6 +17,13 @@ enum UserRole {
   VISUALIZADOR
 }
 
+// Enum para tipos de movimentação de estoque
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+  PRODUCAO
+}
+
 // Modelo de Usuários
 model User {
   id        String   @id @default(cuid())
@@ -33,6 +40,22 @@ model User {
   movimentacoes  MovimentacaoEstoque[]
 
   @@map("users")
+}
+
+// Modelo de Fornecedores
+model Fornecedor {
+  id        String   @id @default(cuid())
+  nome      String
+  contato   String?
+  telefone  String?
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  insumos Insumo[]
+
+  @@map("fornecedores")
 }
 
 // Modelo de Categorias de Insumos
@@ -91,17 +114,20 @@ model Insumo {
   estoqueMinimo     Decimal? @db.Decimal(10, 3)
   categoriaInsumoId String
   unidadeMedidaId   String
+  fornecedorId      String?
   userId            String   @default("cmcf4w2yj0003qhzr8vt0gz9l")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   // Relacionamentos
-  categoriaInsumo      CategoriaInsumo           @relation(fields: [categoriaInsumoId], references: [id])
-  unidadeMedida        UnidadeMedida             @relation(fields: [unidadeMedidaId], references: [id])
-  user                 User                      @relation(fields: [userId], references: [id])
+  categoriaInsumo      CategoriaInsumo           @relation(fields: [categoriaInsumoId], references: [id], onDelete: Restrict)
+  unidadeMedida        UnidadeMedida             @relation(fields: [unidadeMedidaId], references: [id], onDelete: Restrict)
+  fornecedor           Fornecedor?               @relation(fields: [fornecedorId], references: [id], onDelete: SetNull)
+  user                 User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
   ingredientesFicha    IngredienteFichaTecnica[]
   movimentacoesEstoque MovimentacaoEstoque[]
 
+  @@index([nome])
   @@map("insumos")
 }
 
@@ -120,12 +146,13 @@ model FichaTecnica {
   updatedAt          DateTime @updatedAt
 
   // Relacionamentos
-  categoriaReceita CategoriaReceita              @relation(fields: [categoriaReceitaId], references: [id])
-  user             User                          @relation(fields: [userId], references: [id])
+  categoriaReceita CategoriaReceita              @relation(fields: [categoriaReceitaId], references: [id], onDelete: Restrict)
+  user             User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
   ingredientes     IngredienteFichaTecnica[]
   producoes        Producao[]
   precos           PrecoFichaTecnica[]
 
+  @@index([nome])
   @@map("fichas_tecnicas")
 }
 
@@ -140,8 +167,8 @@ model IngredienteFichaTecnica {
 
   // Relacionamentos
   fichaTecnica  FichaTecnica  @relation(fields: [fichaTecnicaId], references: [id], onDelete: Cascade)
-  insumo        Insumo        @relation(fields: [insumoId], references: [id])
-  unidadeMedida UnidadeMedida @relation(fields: [unidadeMedidaId], references: [id])
+  insumo        Insumo        @relation(fields: [insumoId], references: [id], onDelete: Restrict)
+  unidadeMedida UnidadeMedida @relation(fields: [unidadeMedidaId], references: [id], onDelete: Restrict)
 
   @@unique([fichaTecnicaId, insumoId])
   @@map("ingredientes_ficha_tecnica")
@@ -149,23 +176,23 @@ model IngredienteFichaTecnica {
 
 // Modelo de Movimentações de Estoque
 model MovimentacaoEstoque {
-  id              String   @id @default(cuid())
-  tipo            String   // ENTRADA, SAIDA, PRODUCAO
-  quantidade      Decimal  @db.Decimal(10, 3)
-  valorUnitario   Decimal? @db.Decimal(10, 2)
-  valorTotal      Decimal? @db.Decimal(10, 2)
+  id              String           @id @default(cuid())
+  tipo            TipoMovimentacao
+  quantidade      Decimal          @db.Decimal(10, 3)
+  valorUnitario   Decimal?         @db.Decimal(10, 2)
+  valorTotal      Decimal?         @db.Decimal(10, 2)
   observacao      String?
   insumoId        String
   unidadeMedidaId String
   userId          String
   producaoId      String?
-  createdAt       DateTime @default(now())
+  createdAt       DateTime         @default(now())
 
   // Relacionamentos
-  insumo        Insumo        @relation(fields: [insumoId], references: [id])
-  unidadeMedida UnidadeMedida @relation(fields: [unidadeMedidaId], references: [id])
-  user          User          @relation(fields: [userId], references: [id])
-  producao      Producao?     @relation(fields: [producaoId], references: [id])
+  insumo        Insumo        @relation(fields: [insumoId], references: [id], onDelete: Restrict)
+  unidadeMedida UnidadeMedida @relation(fields: [unidadeMedidaId], references: [id], onDelete: Restrict)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  producao      Producao?     @relation(fields: [producaoId], references: [id], onDelete: SetNull)
 
   @@map("movimentacoes_estoque")
 }
@@ -181,8 +208,8 @@ model Producao {
   createdAt            DateTime @default(now())
 
   // Relacionamentos
-  fichaTecnica      FichaTecnica          @relation(fields: [fichaTecnicaId], references: [id])
-  user              User                  @relation(fields: [userId], references: [id])
+  fichaTecnica      FichaTecnica          @relation(fields: [fichaTecnicaId], references: [id], onDelete: Restrict)
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
   movimentacoesEstoque MovimentacaoEstoque[]
 
   @@map("producoes")
@@ -201,7 +228,7 @@ model PrecoFichaTecnica {
   updatedAt      DateTime @updatedAt
 
   // Relacionamentos
-  fichaTecnica FichaTecnica @relation(fields: [fichaTecnicaId], references: [id])
+  fichaTecnica FichaTecnica @relation(fields: [fichaTecnicaId], references: [id], onDelete: Cascade)
 
   @@map("precos_fichas_tecnicas")
 }

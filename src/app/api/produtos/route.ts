@@ -22,7 +22,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nome, marca, categoriaId, unidadeId, custoUnitario, estoqueMinimo, userId } = body
+    const { nome, marca, categoriaId, unidadeId, custoUnitario, estoqueMinimo, userId, fornecedorId } = body
     
     const parsedCusto = parseFloat(custoUnitario)
     const parsedEstoque = parseInt(estoqueMinimo)
@@ -64,12 +64,14 @@ export async function POST(request: NextRequest) {
         custoUnitario: parsedCusto,
         estoqueAtual: 0,
         estoqueMinimo: parsedEstoque,
-        userId: finalUserId
+        userId: finalUserId,
+        fornecedorId: fornecedorId || null
       },
       include: {
         categoriaInsumo: true,
         unidadeMedida: true,
-        user: true
+        user: true,
+        fornecedor: true
       }
     })
     
